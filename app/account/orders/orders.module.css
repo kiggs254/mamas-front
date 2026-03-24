@@ -1,0 +1,211 @@
+.container {
+  padding: 2rem;
+}
+
+.header {
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  color: var(--color-text);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.searchWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-light);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.625rem 1rem 0.625rem 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: var(--color-heading);
+  background-color: var(--color-bg-light);
+  transition: all 0.2s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.searchInput:focus {
+  border-color: var(--color-primary);
+  background-color: white;
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.orderCard {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.orderCard:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+}
+
+.orderHeader {
+  padding: 1.5rem;
+  background-color: var(--color-bg-light);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.orderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.orderId {
+  font-weight: 600;
+  color: var(--color-heading);
+  font-size: 1.125rem;
+}
+
+.orderDate {
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+.orderStatusContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.orderTotal {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-heading);
+  font-size: 1.125rem;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statusBadge.delivered {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.statusBadge.processing {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+
+.orderDetails {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.itemsSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.packageIcon {
+  color: var(--color-text-light);
+}
+
+.viewDetailsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewDetailsBtn:hover {
+  background-color: var(--color-primary-light);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .title, .orderId, .orderTotal { color: var(--color-bg-light); }
+  .subtitle, .orderDate, .itemsSummary { color: var(--color-text-light); }
+  .searchInput {
+    background-color: var(--color-heading);
+    border-color: var(--color-heading);
+    color: var(--color-border);
+  }
+  .orderCard {
+    background: #1e293b;
+    border-color: var(--color-heading);
+  }
+  .orderHeader {
+    background-color: var(--color-heading);
+    border-color: var(--color-heading);
+  }
+  .statusBadge.delivered {
+    background-color: rgba(22, 101, 52, 0.3);
+    color: #4ade80;
+  }
+  .statusBadge.processing {
+    background-color: rgba(133, 77, 14, 0.3);
+    color: #facc15;
+  }
+}

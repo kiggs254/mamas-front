@@ -1,0 +1,54 @@
+.section {
+  max-width: var(--container);
+  margin: 30px auto;
+  padding: 0 15px;
+}
+
+.grid {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 5px;
+}
+
+.grid::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  min-width: 100px;
+  padding: 20px 15px;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.cardIcon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.cardName {
+  font-family: var(--font-primary);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-heading);
+  margin-bottom: 4px;
+}
+
+.cardCount {
+  font-size: 12px;
+  color: var(--color-text);
+}

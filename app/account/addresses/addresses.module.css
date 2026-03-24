@@ -1,0 +1,253 @@
+.container {
+  padding: 2rem;
+}
+
+.header {
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  color: var(--color-text);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.addButton:hover {
+  background-color: var(--color-primary-dark);
+  box-shadow: 0 4px 12px rgba(26, 140, 58, 0.25);
+}
+
+.addressGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .addressGrid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+.addressCard {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.addressCard:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  transform: translateY(-2px);
+}
+
+.defaultCard {
+  border: 2px solid var(--color-primary);
+}
+
+.cardHeader {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-bg-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fafaf9;
+}
+
+.cardTitleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  color: var(--color-text);
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  margin: 0;
+}
+
+.defaultBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.checkIcon {
+  color: var(--color-primary);
+}
+
+.cardBody {
+  padding: 1.5rem;
+  flex-grow: 1;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--color-heading);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.05rem;
+}
+
+.addressLine {
+  color: var(--color-text);
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.cardActions {
+  padding: 1rem 1.5rem;
+  background-color: var(--color-bg-light);
+  border-top: 1px solid var(--color-bg-light);
+  display: flex;
+  gap: 1rem;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.actionBtn:hover {
+  color: var(--color-heading);
+  background-color: var(--color-border);
+}
+
+.deleteBtn:hover {
+  color: #ef4444;
+  background-color: #fee2e2;
+}
+
+.addNewCard {
+  background: transparent;
+  border: 2px dashed var(--color-text-light);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 3rem;
+  min-height: 250px;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.addNewCard:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: rgba(37, 99, 235, 0.02);
+}
+
+.addIconWrapper {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: var(--color-bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.addNewCard:hover .addIconWrapper {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .title, .cardTitle, .name { color: var(--color-bg-light); }
+  .subtitle, .addressLine, .actionBtn { color: var(--color-text-light); }
+  .addressCard {
+    background: #1e293b;
+    border-color: var(--color-heading);
+  }
+  .cardHeader {
+    background-color: var(--color-heading);
+    border-color: var(--color-heading);
+  }
+  .cardActions {
+    background-color: var(--color-heading);
+    border-color: var(--color-heading);
+  }
+  .addNewCard {
+    border-color: var(--color-heading);
+  }
+  .addNewCard:hover {
+    border-color: var(--color-primary);
+  }
+  .addIconWrapper {
+    background-color: var(--color-heading);
+  }
+  .actionBtn:hover {
+    color: var(--color-bg-light);
+    background-color: var(--color-heading);
+  }
+  .deleteBtn:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+}

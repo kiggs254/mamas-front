@@ -1,0 +1,97 @@
+.page {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+.title {
+  font-size: 28px;
+  margin-bottom: 24px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+
+.thumb {
+  background: #fafafa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+}
+
+.name {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.price {
+  font-size: 14px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.qty button {
+  min-width: 32px;
+  height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.remove {
+  margin-left: 12px;
+  color: #c00;
+  border-color: #fcc !important;
+}
+
+.lineTotal {
+  font-weight: 700;
+}
+
+.summary {
+  margin-top: 32px;
+  max-width: 360px;
+  margin-left: auto;
+}
+
+.subtotalRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.checkout {
+  display: block;
+  text-align: center;
+  padding: 14px;
+  background: var(--color-primary, #3bb77e);
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}

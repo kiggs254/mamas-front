@@ -1,0 +1,10 @@
+.article {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+.content {
+  margin-top: 24px;
+  line-height: 1.6;
+}

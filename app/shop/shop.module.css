@@ -1,0 +1,107 @@
+.page {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.toolbar {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.meta {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.filters select,
+.filters button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.imageWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.name {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.rating {
+  font-size: 13px;
+  color: #666;
+}
+
+.priceRow {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-weight: 700;
+}
+
+.old {
+  text-decoration: line-through;
+  color: #999;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.pager {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  justify-content: center;
+}
+
+.pager a {
+  padding: 8px 16px;
+  border: 1px solid var(--color-primary, #3bb77e);
+  border-radius: 8px;
+  color: var(--color-primary, #3bb77e);
+  text-decoration: none;
+}

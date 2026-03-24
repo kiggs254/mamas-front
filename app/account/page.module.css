@@ -1,0 +1,176 @@
+.container {
+  padding: 2rem;
+}
+
+.header {
+  margin-bottom: 2.5rem;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  color: var(--color-text);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.statCard {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+}
+
+.iconWrapper {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  margin: 0;
+  font-weight: 500;
+}
+
+.recentActivity {
+  border-top: 1px solid var(--color-border);
+  padding-top: 2.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  margin: 0;
+}
+
+.viewAll {
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.viewAll:hover {
+  text-decoration: underline;
+  color: var(--color-primary-dark);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: var(--color-bg-light);
+  border-radius: 1rem;
+  border: 1px dashed var(--color-text-light);
+}
+
+.emptyStateIcon {
+  color: var(--color-text-light);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.emptyState h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  margin: 0 0 0.5rem 0;
+}
+
+.emptyState p {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  margin: 0 0 2rem 0;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.shopButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-heading);
+  color: white;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.shopButton:hover {
+  background-color: #1e293b;
+}
+
+/* Dark mode support logic can be added here */
+@media (prefers-color-scheme: dark) {
+  .statCard {
+    background: #1e293b;
+    border-color: var(--color-heading);
+  }
+  .title, .statValue, .sectionTitle { color: var(--color-bg-light); }
+  .subtitle, .statLabel { color: var(--color-text-light); }
+  .recentActivity { border-color: var(--color-heading); }
+  .emptyState {
+    background-color: var(--color-heading);
+    border-color: var(--color-heading);
+  }
+  .emptyState h3 { color: var(--color-bg-light); }
+  .shopButton {
+    background-color: var(--color-primary);
+  }
+  .shopButton:hover {
+    background-color: var(--color-primary);
+  }
+}

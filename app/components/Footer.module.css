@@ -1,0 +1,264 @@
+.footer {
+  margin-top: 50px;
+}
+
+/* CTA Banner */
+.ctaBanner {
+  background: linear-gradient(135deg, #3BB77E 0%, #29A56C 100%);
+  border-radius: var(--radius-xl);
+  max-width: var(--container);
+  margin: 0 auto 40px;
+  padding: 50px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaContent {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+}
+
+.ctaContent h2 {
+  font-size: 32px;
+  color: white;
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-family: var(--font-primary);
+  line-height: 1.2;
+}
+
+.ctaContent p {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.ctaSearch {
+  display: flex;
+  background: white;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-width: 380px;
+}
+
+.ctaSearch input {
+  flex: 1;
+  padding: 12px 18px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+}
+
+.ctaSearch button {
+  padding: 12px 22px;
+  background: var(--color-primary-dark);
+  color: white;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font-primary);
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.ctaSearch button:hover {
+  background: var(--color-heading);
+}
+
+.ctaImage {
+  font-size: 120px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Footer Main */
+.footerMain {
+  background: var(--color-bg-light);
+  padding: 50px 0 30px;
+}
+
+.footerGrid {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 15px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 30px;
+}
+
+.footerBrand {
+  padding-right: 20px;
+}
+
+.footerLogo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.footerLogo img {
+  max-width: 140px;
+  height: auto;
+}
+
+.footerBrand p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin-bottom: 15px;
+}
+
+.footerContact {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.footerContact div {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footerContact strong {
+  color: var(--color-heading);
+}
+
+.footerColumn h4 {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin-bottom: 18px;
+}
+
+.footerColumn ul li {
+  margin-bottom: 10px;
+}
+
+.footerColumn ul li a {
+  font-size: 14px;
+  color: var(--color-text);
+  transition: var(--transition);
+}
+
+.footerColumn ul li a:hover {
+  color: var(--color-primary);
+  padding-left: 4px;
+}
+
+
+
+/* Footer Bottom */
+.footerBottom {
+  background: var(--color-bg-light);
+  border-top: 1px solid var(--color-border);
+  padding: 20px 0;
+}
+
+.footerBottomInner {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.copyright {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.copyright a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.footerSocial {
+  display: flex;
+  gap: 12px;
+}
+
+.socialIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.socialIcon:hover {
+  background: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.footerPayment {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.footerPayment span {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.paymentBadge {
+  background: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-heading);
+  border: 1px solid var(--color-border);
+}
+
+@media (max-width: 1024px) {
+  .footerGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .ctaBanner {
+    flex-direction: column;
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .ctaContent {
+    max-width: none;
+  }
+
+  .ctaSearch {
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .footerGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footerBottomInner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .footerGrid {
+    grid-template-columns: 1fr;
+  }
+}

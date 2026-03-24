@@ -1,0 +1,123 @@
+.hero {
+  background: linear-gradient(135deg, #F0F6E8 0%, #D5E8C0 50%, #CEE6B4 100%);
+  border-radius: var(--radius-xl);
+  margin: 25px auto;
+  max-width: var(--container);
+  padding: 60px 50px;
+  position: relative;
+  overflow: hidden;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background: url('/images/hero-bg.png') center right / contain no-repeat;
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+}
+
+.heroContent h1 {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--color-heading);
+  line-height: 1.15;
+  margin-bottom: 10px;
+  font-family: var(--font-primary);
+}
+
+.heroContent p {
+  font-size: 22px;
+  color: var(--color-text);
+  margin-bottom: 25px;
+}
+
+.heroSearch {
+  display: flex;
+  background: white;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-width: 450px;
+  box-shadow: var(--shadow-sm);
+}
+
+.heroSearch input {
+  flex: 1;
+  padding: 14px 20px;
+  font-size: 14px;
+  border: none;
+  outline: none;
+}
+
+.heroSearch button {
+  background: var(--color-primary);
+  color: white;
+  padding: 14px 25px;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: var(--font-primary);
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.heroSearch button:hover {
+  background: var(--color-primary-dark);
+}
+
+.heroSlider {
+  display: flex;
+  gap: 8px;
+  position: absolute;
+  bottom: 20px;
+  left: 50px;
+  z-index: 2;
+}
+
+.heroDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #C4C4C4;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.heroDot.active {
+  background: var(--color-primary);
+  width: 25px;
+  border-radius: 5px;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 30px 25px;
+    margin: 15px;
+    min-height: auto;
+  }
+
+  .heroContent h1 {
+    font-size: 28px;
+  }
+
+  .heroContent p {
+    font-size: 16px;
+  }
+
+  .hero::after {
+    opacity: 0.2;
+  }
+}
