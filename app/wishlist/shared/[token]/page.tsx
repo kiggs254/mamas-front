@@ -5,6 +5,7 @@ import { serverApiGet } from "@/lib/server-api";
 import { resolveMediaUrl } from "@/lib/api-config";
 import type { StorefrontProduct } from "@/types/api";
 import { productHref } from "@/lib/products";
+import shell from "../../../styles/shell.module.css";
 import styles from "./shared.module.css";
 
 export default async function SharedWishlistPage({ params }: { params: Promise<{ token: string }> }) {
@@ -16,7 +17,18 @@ export default async function SharedWishlistPage({ params }: { params: Promise<{
 
   return (
     <div className={styles.page}>
-      <h1>Shared wishlist</h1>
+      <nav className={shell.breadcrumbs} aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span className={shell.sep}>/</span>
+        <span>Shared wishlist</span>
+      </nav>
+
+      <header className={styles.header}>
+        <p className={styles.eyebrow}>Someone shared</p>
+        <h1 className={styles.title}>Shared wishlist</h1>
+        <div className={styles.titleUnderline} />
+      </header>
+
       <ul className={styles.list}>
         {data.items.map((row, i) => {
           const p = row.product;
@@ -35,7 +47,11 @@ export default async function SharedWishlistPage({ params }: { params: Promise<{
           );
         })}
       </ul>
-      <Link href="/shop">Shop</Link>
+      <div className={styles.footer}>
+        <Link href="/shop" className={styles.shopLink} prefetch={false}>
+          Browse shop
+        </Link>
+      </div>
     </div>
   );
 }

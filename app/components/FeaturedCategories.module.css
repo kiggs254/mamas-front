@@ -34,10 +34,35 @@
   transform: translateY(-3px);
 }
 
-.cardIcon {
-  font-size: 40px;
+.cardImageWrap {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardImage {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
   display: block;
-  margin-bottom: 10px;
+}
+
+.cardFallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-primary);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-primary);
 }
 
 .cardName {

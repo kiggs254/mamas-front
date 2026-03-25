@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import shell from "../styles/shell.module.css";
 import { useCart } from "@/hooks/useCart";
 import { apiDelete, apiPut } from "@/lib/api";
 import { productPrimaryImage } from "@/lib/products";
@@ -42,11 +43,23 @@ export default function CartPage() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Your cart</h1>
-      {isLoading && <p>Loading…</p>}
+      <nav className={shell.breadcrumbs} aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span className={shell.sep}>/</span>
+        <span>Cart</span>
+      </nav>
+
+      <div className={styles.hero}>
+        <p className={styles.eyebrow}>Basket</p>
+        <h1 className={styles.title}>Your cart</h1>
+        <div className={styles.titleUnderline} />
+        <p className={styles.lead}>Review items and quantities before checkout.</p>
+      </div>
+
+      {isLoading && <p className={styles.lead}>Loading…</p>}
       {!isLoading && items.length === 0 && (
-        <p>
-          Cart is empty. <Link href="/shop">Continue shopping</Link>
+        <p className={styles.empty}>
+          Your cart is empty. <Link href="/shop">Continue shopping</Link>
         </p>
       )}
       <div className={styles.list}>

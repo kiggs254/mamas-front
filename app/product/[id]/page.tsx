@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { serverApiGet } from "@/lib/server-api";
 import { getCustomer } from "@/lib/auth";
-import type { Review, StorefrontProduct } from "@/types/api";
+import type { Review, StorefrontCategory, StorefrontProduct } from "@/types/api";
+import { flattenCategoryTree } from "@/lib/categories";
 import ProductDetailView from "./ProductDetailView";
 import PopularProducts from "../../components/PopularProducts";
 
@@ -9,12 +10,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const slug = decodeURIComponent(id);
 
-  const data = await serverApiGet<{ product: StorefrontProduct }>(
-    `/storefront/products/${encodeURIComponent(slug)}`
-  );
+  const [data, catData] = await Promise.all([
+    serverApiGet<{ product: StorefrontProduct }>(`/storefront/products/${encodeURIComponent(slug)}`),
+    serverApiGet<{ categories: StorefrontCategory[] }>("/storefront/categories"),
+  ]);
   if (!data?.product) notFound();
 
   const product = data.product;
+  const flatCats = flattenCategoryTree(catData?.categories || []).slice(0, 14);
+
   const [reviewsData, customer] = await Promise.all([
     serverApiGet<{ reviews: Review[] }>(`/storefront/reviews?product_id=${product.id}&limit=50`),
     getCustomer(),
@@ -29,7 +33,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <ProductDetailView product={product} initialReviews={initialReviews} wishlistInitially={inWl} />
+      <ProductDetailView
+        product={product}
+        initialReviews={initialReviews}
+        wishlistInitially={inWl}
+        sidebarCategories={flatCats}
+      />
       <PopularProducts />
     </>
   );

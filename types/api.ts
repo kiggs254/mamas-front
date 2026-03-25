@@ -26,6 +26,8 @@ export type StorefrontCategory = {
   name: string;
   slug?: string;
   parent_id?: number | null;
+  /** Category thumbnail (often `/uploads/...`); use with resolveMediaUrl */
+  image?: string | null;
   children?: StorefrontCategory[];
 };
 
@@ -166,3 +168,21 @@ export type SubscriptionRow = {
 
 export type BrandRow = { id: number; name: string; slug?: string };
 export type TagRow = { id: number; name: string; slug?: string };
+
+/** Public store-locator / branch list (Appearance → Branches) */
+export type StoreLocatorBranch = {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  phone?: string;
+  hours?: string;
+};
+
+export type StoreLocatorConfig = {
+  enabled: boolean;
+  googleMapsApiKey?: string;
+  stores: StoreLocatorBranch[];
+};

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { serverApiGet } from "@/lib/server-api";
+import shell from "../styles/shell.module.css";
 
 type LocatorConfig = {
   enabled?: boolean;
@@ -9,19 +11,33 @@ export default async function StoreLocatorPage() {
   const data = await serverApiGet<LocatorConfig>("/storefront/store-locator");
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 16px" }}>
-      <h1>Store locator</h1>
+    <div className={shell.shell}>
+      <nav className={shell.breadcrumbs} aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span className={shell.sep}>/</span>
+        <span>Store locator</span>
+      </nav>
+
+      <header className={shell.pageHero}>
+        <p className={shell.eyebrow}>Visit us</p>
+        <h1 className={shell.title}>Store locator</h1>
+        <div className={shell.titleUnderline} />
+        <p className={shell.lead}>Find a Cleanshelf location, hours, and contact details.</p>
+      </header>
+
       {!data?.stores?.length ? (
-        <p>No locations configured.</p>
+        <p className={shell.empty}>Store locations are not configured yet.</p>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
+        <ul className={shell.storeList}>
           {data.stores.map((s, i) => (
-            <li key={i} style={{ padding: 16, border: "1px solid #eee", borderRadius: 8, marginBottom: 12 }}>
-              <strong>{s.name}</strong>
-              <div>{s.address}</div>
-              <div>{s.city}</div>
-              {s.phone && <div>{s.phone}</div>}
-              {s.hours && <div>{s.hours}</div>}
+            <li key={i} className={shell.storeCard}>
+              <h2 className={shell.storeName}>{s.name || "Store"}</h2>
+              <div className={shell.storeMeta}>
+                {s.address ? <p>{s.address}</p> : null}
+                {s.city ? <p>{s.city}</p> : null}
+                {s.phone ? <p>{s.phone}</p> : null}
+                {s.hours ? <p>{s.hours}</p> : null}
+              </div>
             </li>
           ))}
         </ul>

@@ -1,19 +1,15 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { LocationIcon } from './Icons';
+import { useState, useEffect } from "react";
+import { LocationIcon } from "./Icons";
+import { headerLocationLabel, readSelectedBranch } from "@/lib/branch-selection";
 
 export default function HeaderLocation() {
   const [location, setLocation] = useState("Select Location");
 
   useEffect(() => {
     const fetchLocation = () => {
-      const stored = localStorage.getItem("cleanshelf_location");
-      if (stored) {
-        setLocation(stored);
-      } else {
-        setLocation("Select Location");
-      }
+      setLocation(headerLocationLabel(readSelectedBranch()));
     };
     
     // Initial fetch

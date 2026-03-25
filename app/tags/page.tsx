@@ -1,27 +1,45 @@
 import Link from "next/link";
 import { serverApiGet } from "@/lib/server-api";
 import type { TagRow } from "@/types/api";
+import shell from "../styles/shell.module.css";
 
 export default async function TagsPage() {
   const data = await serverApiGet<{ tags: TagRow[] }>("/storefront/tags");
   const tags = data?.tags || [];
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 16px" }}>
-      <h1>Tags</h1>
-      <ul style={{ display: "flex", flexWrap: "wrap", gap: 12, listStyle: "none", padding: 0 }}>
-        {tags.map((t) => (
-          <li key={t.id}>
+    <div className={shell.shell}>
+      <nav className={shell.breadcrumbs} aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span className={shell.sep}>/</span>
+        <span>Tags</span>
+      </nav>
+
+      <header className={shell.pageHero}>
+        <p className={shell.eyebrow}>Discover</p>
+        <h1 className={shell.title}>Product tags</h1>
+        <div className={shell.titleUnderline} />
+        <p className={shell.lead}>Tap a tag to filter the shop by theme, diet, or product type.</p>
+      </header>
+
+      {tags.length === 0 ? (
+        <p className={shell.empty}>No tags are configured yet.</p>
+      ) : (
+        <div className={shell.panel}>
+          <div className={shell.tagCloud}>
+          {tags.map((t) => (
             <Link
+              key={t.id}
               href={t.slug ? `/shop?tag_slug=${encodeURIComponent(t.slug)}` : "/shop"}
+              className={shell.tagPill}
               prefetch={false}
-              style={{ padding: "6px 12px", border: "1px solid #ddd", borderRadius: 20, textDecoration: "none" }}
             >
               {t.name}
             </Link>
-          </li>
-        ))}
-      </ul>
+          ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

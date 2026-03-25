@@ -1,8 +1,10 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { apiPost } from "@/lib/api";
+import shell from "../../styles/shell.module.css";
 import styles from "../subscriptions.module.css";
 
 function SignupForm() {
@@ -55,19 +57,33 @@ function SignupForm() {
   };
 
   return (
-    <div className={styles.page}>
-      <h1>Complete subscription</h1>
-      <form onSubmit={submit} style={{ maxWidth: 480, display: "grid", gap: 10 }}>
+    <div className={styles.signupPage}>
+      <nav className={shell.breadcrumbs} aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span className={shell.sep}>/</span>
+        <Link href="/subscriptions">Subscriptions</Link>
+        <span className={shell.sep}>/</span>
+        <span>Sign up</span>
+      </nav>
+
+      <header className={styles.header}>
+        <p className={styles.eyebrow}>Checkout</p>
+        <h1 className={styles.title}>Complete subscription</h1>
+        <div className={styles.titleUnderline} />
+        <p className={styles.lead}>Enter your details and delivery address. Nairobi delivery only.</p>
+      </header>
+
+      <form className={styles.form} onSubmit={submit}>
         <input placeholder="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <input placeholder="First name" value={first_name} onChange={(e) => setFirst(e.target.value)} />
         <input placeholder="Last name" value={last_name} onChange={(e) => setLast(e.target.value)} />
         <input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        <input placeholder="Street" required value={address_1} onChange={(e) => setA1(e.target.value)} />
+        <input placeholder="Street address" required value={address_1} onChange={(e) => setA1(e.target.value)} />
         <input placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
         <input placeholder="County / state" value={state} onChange={(e) => setState(e.target.value)} />
         <input placeholder="Country" value={country} onChange={(e) => setCountry(e.target.value)} />
         <label>
-          Delivery day (1=Mon … 7=Sun)
+          Delivery day (1 = Mon … 7 = Sun)
           <input
             type="number"
             min={1}
@@ -79,7 +95,7 @@ function SignupForm() {
         <button type="submit" disabled={busy} className={styles.cta}>
           {busy ? "…" : "Continue to payment"}
         </button>
-        {msg && <p>{msg}</p>}
+        {msg ? <p className={styles.formMsg}>{msg}</p> : null}
       </form>
     </div>
   );
@@ -87,7 +103,13 @@ function SignupForm() {
 
 export default function SubscriptionSignupPage() {
   return (
-    <Suspense fallback={<div className={styles.page}>Loading…</div>}>
+    <Suspense
+      fallback={
+        <div className={styles.signupPage}>
+          <p className={styles.lead}>Loading…</p>
+        </div>
+      }
+    >
       <SignupForm />
     </Suspense>
   );

@@ -9,12 +9,12 @@ import {
   CompareIcon,
   PhoneIcon,
   ShieldIcon,
-  MenuIcon,
   PackageIcon,
 } from "./Icons";
 import HeaderLocation from "./HeaderLocation";
 import HeaderCart from "./HeaderCart";
 import HeaderSearch from "./HeaderSearch";
+import BrowseCategoriesDropdown from "./BrowseCategoriesDropdown";
 
 export default async function Header() {
   const [customer, catData, settingsData] = await Promise.all([
@@ -111,9 +111,7 @@ export default async function Header() {
 
       <div className={styles.bottomBar}>
         <div className={styles.bottomBarInner}>
-          <Link href="/shop" className={styles.browseBtn} prefetch={false}>
-            <MenuIcon size={16} color="white" /> Browse All Categories
-          </Link>
+          <BrowseCategoriesDropdown categories={categories} />
           <nav className={styles.navLinks}>
             <Link href="/shop?on_sale=true" className={styles.navLink} prefetch={false}>
               Deals <span className={styles.hot}>Hot</span>

@@ -7,21 +7,9 @@ import styles from "./CartSidebar.module.css";
 import { MinusIcon, PlusIcon } from "./Icons";
 import { useCart } from "@/hooks/useCart";
 import { apiDelete, apiPut } from "@/lib/api";
-import { productEffectivePrice, productPrimaryImage } from "@/lib/products";
-import type { CartLine, StorefrontProduct, ProductVariant } from "@/types/api";
-
-function lineUnitPrice(line: CartLine): number {
-  const v = line.variant as ProductVariant | null | undefined;
-  if (v && v.price != null) {
-    const vp = Number(v.price);
-    const vs = v.sale_price != null ? Number(v.sale_price) : null;
-    if (vs != null && !Number.isNaN(vs) && vs > 0 && vs < vp) return vs;
-    return vp;
-  }
-  const p = line.product as StorefrontProduct | undefined;
-  if (p) return productEffectivePrice(p).price;
-  return 0;
-}
+import { productPrimaryImage } from "@/lib/products";
+import { cartLineUnitPrice, cartSubtotal } from "@/lib/cart";
+import type { CartLine, StorefrontProduct } from "@/types/api";
 
 export default function CartSidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,9 +22,7 @@ export default function CartSidebar() {
     return () => window.removeEventListener("openCart", handleOpen);
   }, []);
 
-  const totalAmount = useMemo(() => {
-    return items.reduce((acc, line) => acc + lineUnitPrice(line) * line.quantity, 0);
-  }, [items]);
+  const totalAmount = useMemo(() => cartSubtotal(items), [items]);
 
   const setQty = async (line: CartLine, quantity: number) => {
     if (quantity < 1) return;
@@ -73,7 +59,7 @@ export default function CartSidebar() {
             const p = line.product as StorefrontProduct | undefined;
             const name = p?.name || "Item";
             const img = p ? productPrimaryImage(p) : "";
-            const unit = lineUnitPrice(line);
+            const unit = cartLineUnitPrice(line);
             return (
               <div key={line.id} className={styles.item}>
                 <div className={styles.itemImage}>

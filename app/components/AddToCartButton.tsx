@@ -10,6 +10,7 @@ type Props = {
   variantId?: number | null;
   className?: string;
   label?: string;
+  cartIconSize?: number;
 };
 
 export default function AddToCartButton({
@@ -17,6 +18,7 @@ export default function AddToCartButton({
   variantId,
   className,
   label = "Add",
+  cartIconSize = 14,
 }: Props) {
   const { mutate } = useCart();
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export default function AddToCartButton({
 
   return (
     <button type="button" className={className} onClick={handle} disabled={loading}>
-      <CartIcon size={14} /> {loading ? "…" : label}
+      <CartIcon size={cartIconSize} /> {loading ? "…" : label}
     </button>
   );
 }

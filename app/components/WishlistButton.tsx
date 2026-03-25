@@ -9,9 +9,12 @@ type Props = {
   productId: number;
   initialInWishlist?: boolean;
   className?: string;
+  iconSize?: number;
+  /** When set, shows text next to the heart (e.g. product page outline button). */
+  label?: string;
 };
 
-export default function WishlistButton({ productId, initialInWishlist, className }: Props) {
+export default function WishlistButton({ productId, initialInWishlist, className, iconSize = 20, label }: Props) {
   const router = useRouter();
   const [inList, setInList] = useState(Boolean(initialInWishlist));
   const [loading, setLoading] = useState(false);
@@ -46,7 +49,8 @@ export default function WishlistButton({ productId, initialInWishlist, className
       title={inList ? "Remove from wishlist" : "Add to wishlist"}
       aria-label={inList ? "Remove from wishlist" : "Add to wishlist"}
     >
-      <HeartIcon size={20} filled={inList} />
+      <HeartIcon size={iconSize} filled={inList} />
+      {label ? <span>{label}</span> : null}
     </button>
   );
 }
