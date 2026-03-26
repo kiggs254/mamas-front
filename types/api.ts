@@ -47,6 +47,9 @@ export type StorefrontProduct = {
   variants?: ProductVariant[];
   tags?: { id: number; name: string; slug?: string }[];
   reviews?: Review[];
+  sold_count?: number | null;
+  stock?: number | null;
+  quantity?: number | null;
 };
 
 export type CartLine = {

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { serverApiGet } from "@/lib/server-api";
-import type { StorefrontProduct } from "@/types/api";
 import {
   productEffectivePrice,
   productHref,
@@ -9,6 +8,7 @@ import {
   productReviewCount,
   productSalePercentOff,
 } from "@/lib/products";
+import { fetchStorefrontProductsWithFallback } from "@/lib/homepage-products";
 import styles from "./PopularProducts.module.css";
 import StoreProductCard from "./StoreProductCard";
 import { getCustomer } from "@/lib/auth";
@@ -21,11 +21,13 @@ async function wishlistSet(customerId: number | null): Promise<Set<number>> {
 }
 
 export default async function PopularProducts() {
-  const [data, customer] = await Promise.all([
-    serverApiGet<{ products: StorefrontProduct[] }>("/storefront/products?sort=best_sellers&limit=10"),
+  const [products, customer] = await Promise.all([
+    fetchStorefrontProductsWithFallback(
+      { sort: "best_sellers", limit: 10 },
+      [{ sort: "newest", limit: 10 }],
+    ),
     getCustomer(),
   ]);
-  const products = data?.products || [];
   const wl = await wishlistSet(customer?.id ?? null);
 
   return (

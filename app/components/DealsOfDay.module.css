@@ -7,8 +7,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  justify-items: start;
+  gap: 8px;
 }
 
 @media (max-width: 1024px) {

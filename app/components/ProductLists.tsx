@@ -1,8 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { serverApiGet } from "@/lib/server-api";
 import type { StorefrontProduct } from "@/types/api";
 import { productEffectivePrice, productHref, productPrimaryImage, productRatingApprox } from "@/lib/products";
+import {
+  fetchStorefrontProducts,
+  fetchStorefrontProductsWithFallback,
+} from "@/lib/homepage-products";
 import styles from "./ProductLists.module.css";
 import { StarIcon } from "./Icons";
 
@@ -14,13 +17,6 @@ function StarRating({ rating }: { rating: number }) {
       ))}
     </div>
   );
-}
-
-async function fetchList(sort: string, limit = 5) {
-  const data = await serverApiGet<{ products: StorefrontProduct[] }>(
-    `/storefront/products?sort=${encodeURIComponent(sort)}&limit=${limit}`
-  );
-  return data?.products || [];
 }
 
 function ProductColumn({ title, products }: { title: string; products: StorefrontProduct[] }) {
@@ -64,10 +60,10 @@ function ProductColumn({ title, products }: { title: string; products: Storefron
 
 export default async function ProductLists() {
   const [topSelling, trending, recent, topRated] = await Promise.all([
-    fetchList("best_sellers", 5),
-    fetchList("newest", 5),
-    fetchList("newest", 5),
-    fetchList("price_desc", 5),
+    fetchStorefrontProductsWithFallback({ sort: "best_sellers", limit: 5 }, [{ sort: "newest", limit: 5 }]),
+    fetchStorefrontProductsWithFallback({ featured: true, limit: 5 }, [{ sort: "newest", limit: 5 }]),
+    fetchStorefrontProducts({ sort: "newest", limit: 5 }),
+    fetchStorefrontProductsWithFallback({ sort: "price_desc", limit: 5 }, [{ sort: "newest", limit: 5 }]),
   ]);
 
   return (

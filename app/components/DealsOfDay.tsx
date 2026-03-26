@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { serverApiGet } from "@/lib/server-api";
-import type { StorefrontProduct } from "@/types/api";
 import {
   productEffectivePrice,
   productHref,
@@ -9,16 +8,19 @@ import {
   productReviewCount,
   productSalePercentOff,
 } from "@/lib/products";
+import { fetchStorefrontProductsWithFallback } from "@/lib/homepage-products";
 import styles from "./DealsOfDay.module.css";
 import StoreProductCard from "./StoreProductCard";
 import { getCustomer } from "@/lib/auth";
 
 export default async function DealsOfDay() {
-  const [data, customer] = await Promise.all([
-    serverApiGet<{ products: StorefrontProduct[] }>("/storefront/products?on_sale=true&limit=8"),
+  const [products, customer] = await Promise.all([
+    fetchStorefrontProductsWithFallback(
+      { on_sale: true, limit: 8 },
+      [{ featured: true, limit: 8 }, { sort: "newest", limit: 8 }],
+    ),
     getCustomer(),
   ]);
-  const products = data?.products || [];
 
   const wlData =
     customer &&

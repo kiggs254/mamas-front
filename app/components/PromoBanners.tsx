@@ -1,12 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { serverApiGet } from "@/lib/server-api";
-import { resolveMediaUrl } from "@/lib/api-config";
 import type { Banner } from "@/types/api";
 import styles from "./PromoBanners.module.css";
-import { ArrowRightIcon, LeafIcon, CoffeeIcon, ShoppingBagIcon } from "./Icons";
+import { ArrowRightIcon } from "./Icons";
 
-const fallbacks = [LeafIcon, CoffeeIcon, ShoppingBagIcon];
+const DEFAULT_TITLES = ["Everyday fresh products", "Breakfast & beverages", "Organic selection"];
+
+const PROMO_BACKGROUNDS = [
+  "/images/promo-banner-1.png",
+  "/images/promo-banner-2.png",
+  "/images/promo-banner-3.png",
+] as const;
 
 export default async function PromoBanners() {
   const data = await serverApiGet<{ banners: Banner[] }>("/storefront/banners");
@@ -23,31 +28,29 @@ export default async function PromoBanners() {
   return (
     <section className={styles.section}>
       <div className={styles.grid}>
-        {(use.length ? use : [null, null, null]).map((b, i) => {
-          const Icon = fallbacks[i % fallbacks.length];
-          const raw = b?.image_url || (b as { image?: string } | null)?.image;
-          const src = raw ? resolveMediaUrl(raw) : "";
+        {[0, 1, 2].map((i) => {
+          const b = use[i] ?? null;
+          const title = b?.title || DEFAULT_TITLES[i];
+          const href = b?.link_url?.trim() ? b.link_url : "/shop";
+          const bg = PROMO_BACKGROUNDS[i];
           return (
-            <div key={b?.id ?? i} className={styles.banner}>
-              <div className={styles.bannerIcon}>
-                {src ? (
-                  <Image src={src} alt={b?.title || ""} width={80} height={80} style={{ objectFit: "contain" }} />
-                ) : (
-                  <Icon size={80} color="var(--color-primary)" />
-                )}
+            <div key={b?.id ?? `promo-${i}`} className={styles.banner}>
+              <div className={styles.bannerBgWrap} aria-hidden>
+                <Image
+                  src={bg}
+                  alt=""
+                  fill
+                  className={styles.bannerBg}
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  priority={i === 0}
+                />
               </div>
-              <h3 className={styles.bannerTitle}>
-                {b?.title || ["Everyday fresh products", "Breakfast & beverages", "Organic selection"][i]}
-              </h3>
-              {b?.link_url ? (
-                <Link href={b.link_url} className={styles.bannerBtn} prefetch={false}>
+              <div className={styles.bannerInner}>
+                <h3 className={styles.bannerTitle}>{title}</h3>
+                <Link href={href} className={styles.bannerBtn} prefetch={false}>
                   Shop Now <ArrowRightIcon size={14} color="white" />
                 </Link>
-              ) : (
-                <Link href="/shop" className={styles.bannerBtn} prefetch={false}>
-                  Shop Now <ArrowRightIcon size={14} color="white" />
-                </Link>
-              )}
+              </div>
             </div>
           );
         })}

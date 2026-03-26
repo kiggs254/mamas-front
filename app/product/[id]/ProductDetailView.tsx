@@ -23,6 +23,7 @@ import {
 } from "../../components/Icons";
 import WishlistButton from "../../components/WishlistButton";
 import { apiPost } from "@/lib/api";
+import { resolveMediaUrl } from "@/lib/api-config";
 
 const COMPARE_KEY = "cleanshelf_compare_ids";
 
@@ -362,7 +363,17 @@ export default function ProductDetailView({
                     prefetch={false}
                   >
                     <span className={styles.catIcon} style={{ background: colorFor(cat.name) }}>
-                      🛒
+                      {cat.image ? (
+                        <Image
+                          src={resolveMediaUrl(cat.image)}
+                          alt=""
+                          width={24}
+                          height={24}
+                          style={{ objectFit: "contain", width: 24, height: 24 }}
+                        />
+                      ) : (
+                        cat.name.trim().charAt(0).toUpperCase()
+                      )}
                     </span>
                     <span className={styles.catName}>{cat.name}</span>
                     <span className={styles.catChevron} aria-hidden>

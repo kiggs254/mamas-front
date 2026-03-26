@@ -2,14 +2,13 @@
   --card-green: #3bb77e;
   --card-green-soft: #def9ec;
   position: relative;
-  border: 1px solid #ececec;
+  border: 2px solid #ececec;
   border-radius: 12px;
-  /* Tight horizontal padding so copy lines up with the image strip */
-  padding: 13px 5px 10px;
+  /* Inner padding only — spacing between cards is controlled by grid gap in parent sections */
+  padding: 20px 18px 18px;
   background: var(--color-bg, #fff);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
-  max-width: 168px;
   margin: 0;
   overflow: visible;
   box-sizing: border-box;
@@ -23,8 +22,8 @@
 
 .discountBadge {
   position: absolute;
-  top: -1px;
-  left: -1px;
+  top: -2px;
+  left: -2px;
   z-index: 4;
   padding: 5px 9px 5px 8px;
   background: var(--card-green);
@@ -43,12 +42,9 @@
   background: transparent;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 10px;
-  /* Edge-to-edge with card inner edge (cancels horizontal padding) */
-  margin-left: -5px;
-  margin-right: -5px;
-  width: calc(100% + 10px);
-  max-width: none;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .imageLink {

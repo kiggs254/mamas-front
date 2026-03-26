@@ -17,7 +17,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!data?.product) notFound();
 
   const product = data.product;
-  const flatCats = flattenCategoryTree(catData?.categories || []).slice(0, 14);
+  const flatCats = (catData?.categories || [])
+    .filter((c) => c.parent_id == null)
+    .slice(0, 8);
 
   const [reviewsData, customer] = await Promise.all([
     serverApiGet<{ reviews: Review[] }>(`/storefront/reviews?product_id=${product.id}&limit=50`),
