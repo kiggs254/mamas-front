@@ -154,20 +154,3 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .card {
-    background: #1e293b;
-    border-color: var(--color-heading);
-  }
-  .title, .sectionTitle { color: var(--color-bg-light); }
-  .subtitle, .label { color: var(--color-text-light); }
-  .input {
-    background-color: var(--color-heading);
-    border-color: var(--color-heading);
-    color: var(--color-border);
-  }
-  .input:focus { background-color: var(--color-heading); }
-  .divider { background-color: var(--color-heading); }
-}

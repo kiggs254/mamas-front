@@ -217,37 +217,3 @@
   background-color: var(--color-primary-light);
   color: var(--color-primary);
 }
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .title, .cardTitle, .name { color: var(--color-bg-light); }
-  .subtitle, .addressLine, .actionBtn { color: var(--color-text-light); }
-  .addressCard {
-    background: #1e293b;
-    border-color: var(--color-heading);
-  }
-  .cardHeader {
-    background-color: var(--color-heading);
-    border-color: var(--color-heading);
-  }
-  .cardActions {
-    background-color: var(--color-heading);
-    border-color: var(--color-heading);
-  }
-  .addNewCard {
-    border-color: var(--color-heading);
-  }
-  .addNewCard:hover {
-    border-color: var(--color-primary);
-  }
-  .addIconWrapper {
-    background-color: var(--color-heading);
-  }
-  .actionBtn:hover {
-    color: var(--color-bg-light);
-    background-color: var(--color-heading);
-  }
-  .deleteBtn:hover {
-    background-color: rgba(239, 68, 68, 0.1);
-  }
-}

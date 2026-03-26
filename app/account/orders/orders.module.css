@@ -182,30 +182,3 @@
 .viewDetailsBtn:hover {
   background-color: var(--color-primary-light);
 }
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .title, .orderId, .orderTotal { color: var(--color-bg-light); }
-  .subtitle, .orderDate, .itemsSummary { color: var(--color-text-light); }
-  .searchInput {
-    background-color: var(--color-heading);
-    border-color: var(--color-heading);
-    color: var(--color-border);
-  }
-  .orderCard {
-    background: #1e293b;
-    border-color: var(--color-heading);
-  }
-  .orderHeader {
-    background-color: var(--color-heading);
-    border-color: var(--color-heading);
-  }
-  .statusBadge.delivered {
-    background-color: rgba(22, 101, 52, 0.3);
-    color: #4ade80;
-  }
-  .statusBadge.processing {
-    background-color: rgba(133, 77, 14, 0.3);
-    color: #facc15;
-  }
-}

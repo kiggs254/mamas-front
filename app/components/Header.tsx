@@ -15,6 +15,7 @@ import HeaderLocation from "./HeaderLocation";
 import HeaderCart from "./HeaderCart";
 import HeaderSearch from "./HeaderSearch";
 import BrowseCategoriesDropdown from "./BrowseCategoriesDropdown";
+import MobileMenu from "./MobileMenu";
 
 export default async function Header() {
   const [customer, catData, settingsData] = await Promise.all([
@@ -71,12 +72,20 @@ export default async function Header() {
 
       <div className={styles.middleBar}>
         <div className={styles.middleBarInner}>
+          <div className={styles.mobileNavWrap}>
+            <MobileMenu
+              phone={phone}
+              signedIn={!!customer}
+              accountLabel={firstName || "Account"}
+              categories={categories}
+            />
+          </div>
           <Link href="/" className={styles.logo}>
             <img src="/images/logo.png" alt="Cleanshelf Supermarket" className={styles.logoImage} />
           </Link>
-          <HeaderSearch categories={categories} />
+          <HeaderSearch categories={categories} className={styles.headerSearchSlot} />
           <div className={styles.headerActions}>
-            <div className={styles.headerAction}>
+            <div className={`${styles.headerAction} ${styles.compareDesktopOnly}`}>
               <span className={styles.icon}>
                 <CompareIcon size={22} />
               </span>
@@ -84,7 +93,7 @@ export default async function Header() {
                 <span className={styles.actionLabel}>Compare</span>
               </div>
             </div>
-            <Link href="/account/wishlist" className={styles.headerAction} style={{ textDecoration: "none", color: "inherit" }}>
+            <Link href="/account/wishlist" className={styles.headerAction}>
               <span className={styles.icon}>
                 <HeartIcon size={22} />
               </span>
@@ -93,11 +102,7 @@ export default async function Header() {
               </div>
             </Link>
             <HeaderCart />
-            <Link
-              href={customer ? "/account" : "/login"}
-              className={styles.headerAction}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
+            <Link href={customer ? "/account" : "/login"} className={styles.headerAction}>
               <span className={styles.icon}>
                 <UserIcon size={22} />
               </span>

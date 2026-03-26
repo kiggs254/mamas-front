@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { serverApiGet } from "@/lib/server-api";
-import type { StorefrontProduct } from "@/types/api";
+import type { StorefrontCategory, StorefrontProduct } from "@/types/api";
 import {
   productEffectivePrice,
   productHref,
@@ -11,8 +11,16 @@ import {
 } from "@/lib/products";
 import { getCustomer } from "@/lib/auth";
 import StoreProductCard from "../components/StoreProductCard";
+import ShopToolbar from "../components/ShopToolbar";
+import FilterPanel from "../components/FilterPanel";
 import shell from "../styles/shell.module.css";
 import styles from "./shop.module.css";
+import {
+  buildProductsApiQueryString,
+  countActiveShopFilters,
+  shopPathFromState,
+  type ShopQueryState,
+} from "@/lib/shop-query";
 
 function slugToTitle(slug: string): string {
   return slug
@@ -22,43 +30,70 @@ function slugToTitle(slug: string): string {
     .join(" ");
 }
 
+const ALLOWED_LIMITS = new Set(["10", "15", "24", "48"]);
+
+function parseShopState(sp: Record<string, string | string[] | undefined>): ShopQueryState {
+  const q = typeof sp.q === "string" ? sp.q : "";
+  const search = typeof sp.search === "string" ? sp.search : q;
+  const limitRaw = typeof sp.limit === "string" ? sp.limit : "24";
+  const limit = ALLOWED_LIMITS.has(limitRaw) ? limitRaw : "24";
+  return {
+    q: search,
+    search,
+    category_slug: typeof sp.category_slug === "string" ? sp.category_slug : undefined,
+    brand_slug: typeof sp.brand_slug === "string" ? sp.brand_slug : undefined,
+    tag_slug: typeof sp.tag_slug === "string" ? sp.tag_slug : undefined,
+    sort: typeof sp.sort === "string" ? sp.sort : "newest",
+    on_sale: sp.on_sale === "true" ? "true" : undefined,
+    featured: sp.featured === "true" ? "true" : undefined,
+    min_price: typeof sp.min_price === "string" ? sp.min_price : undefined,
+    max_price: typeof sp.max_price === "string" ? sp.max_price : undefined,
+    rating: typeof sp.rating === "string" ? sp.rating : undefined,
+    limit,
+    page: typeof sp.page === "string" ? sp.page : "1",
+  };
+}
+
 export default async function ShopPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const qs = new URLSearchParams();
-  const q = typeof sp.q === "string" ? sp.q : "";
-  const search = typeof sp.search === "string" ? sp.search : q;
-  if (search) qs.set("search", search);
-  const categorySlug = typeof sp.category_slug === "string" ? sp.category_slug : "";
-  const brandSlug = typeof sp.brand_slug === "string" ? sp.brand_slug : "";
-  const tagSlug = typeof sp.tag_slug === "string" ? sp.tag_slug : "";
-  if (categorySlug) qs.set("category_slug", categorySlug);
-  if (brandSlug) qs.set("brand_slug", brandSlug);
-  if (tagSlug) qs.set("tag_slug", tagSlug);
-  if (typeof sp.sort === "string") qs.set("sort", sp.sort);
-  if (typeof sp.on_sale === "string") qs.set("on_sale", sp.on_sale);
-  if (typeof sp.featured === "string") qs.set("featured", sp.featured);
-  qs.set("limit", "24");
-  qs.set("page", typeof sp.page === "string" ? sp.page : "1");
+  const state = parseShopState(sp);
+  const search = (state.search || "").trim();
+  const categorySlug = state.category_slug || "";
+  const brandSlug = state.brand_slug || "";
+  const tagSlug = state.tag_slug || "";
 
-  const query = qs.toString();
-  const [data, customer] = await Promise.all([
+  const apiQs = buildProductsApiQueryString(state);
+
+  const [data, customer, catData, cheapData, priceyData] = await Promise.all([
     serverApiGet<{
       products: StorefrontProduct[];
       total: number;
       page: number;
       limit: number;
-    }>(`/storefront/products?${query}`),
+    }>(`/storefront/products?${apiQs}`),
     getCustomer(),
+    serverApiGet<{ categories: StorefrontCategory[] }>("/storefront/categories"),
+    serverApiGet<{ products: StorefrontProduct[] }>("/storefront/products?limit=1&sort=price_asc"),
+    serverApiGet<{ products: StorefrontProduct[] }>("/storefront/products?limit=1&sort=price_desc"),
   ]);
 
   const products = data?.products || [];
   const total = data?.total ?? 0;
   const page = data?.page ?? 1;
-  const limit = data?.limit ?? 24;
+  const limit = data?.limit ?? (Number(state.limit || "24") || 24);
+
+  const cheapP = cheapData?.products?.[0];
+  const priceyP = priceyData?.products?.[0];
+  const priceHintMin = cheapP ? productEffectivePrice(cheapP).price : undefined;
+  const priceHintMax = priceyP ? productEffectivePrice(priceyP).price : undefined;
+
+  const roots = (catData?.categories || [])
+    .filter((c) => c.parent_id == null)
+    .map((c) => ({ id: c.id, name: c.name, slug: c.slug }));
 
   const wlData =
     customer &&
@@ -72,16 +107,22 @@ export default async function ShopPage({
     pageTitle = `Search results`;
     contextLabel = `“${search}”`;
   } else if (categorySlug) {
-    pageTitle = first?.category?.slug === categorySlug && first.category.name ? first.category.name : slugToTitle(categorySlug);
+    pageTitle =
+      first?.category?.slug === categorySlug && first.category.name
+        ? first.category.name
+        : slugToTitle(categorySlug);
     contextLabel = "Category";
   } else if (brandSlug) {
-    pageTitle = first?.brand?.slug === brandSlug && first.brand?.name ? first.brand.name : slugToTitle(brandSlug);
+    pageTitle =
+      first?.brand?.slug === brandSlug && first.brand?.name ? first.brand.name : slugToTitle(brandSlug);
     contextLabel = "Brand";
   } else if (tagSlug) {
     const tagName = first?.tags?.find((t) => t.slug === tagSlug)?.name;
     pageTitle = tagName || slugToTitle(tagSlug);
     contextLabel = "Tag";
   }
+
+  const activeFilterCount = countActiveShopFilters(state);
 
   return (
     <div className={shell.shell}>
@@ -111,23 +152,19 @@ export default async function ShopPage({
         </p>
       </header>
 
-      <form className={`${shell.panel} ${styles.filterForm}`} method="get">
-        <input type="hidden" name="q" value={search} />
-        {categorySlug ? <input type="hidden" name="category_slug" value={categorySlug} /> : null}
-        {brandSlug ? <input type="hidden" name="brand_slug" value={brandSlug} /> : null}
-        {tagSlug ? <input type="hidden" name="tag_slug" value={tagSlug} /> : null}
-        <select name="sort" defaultValue={typeof sp.sort === "string" ? sp.sort : "newest"}>
-          <option value="newest">Newest</option>
-          <option value="price_asc">Price: low to high</option>
-          <option value="price_desc">Price: high to low</option>
-          <option value="best_sellers">Best sellers</option>
-        </select>
-        <label>
-          <input type="checkbox" name="on_sale" value="true" defaultChecked={sp.on_sale === "true"} />
-          On sale only
-        </label>
-        <button type="submit">Apply filters</button>
-      </form>
+      <ShopToolbar
+        state={state}
+        total={total}
+        activeFilterCount={activeFilterCount}
+        filterPanel={
+          <FilterPanel
+            categories={roots}
+            state={state}
+            priceHintMin={priceHintMin}
+            priceHintMax={priceHintMax}
+          />
+        }
+      />
 
       <div className={styles.grid}>
         {products.map((product) => {
@@ -159,7 +196,9 @@ export default async function ShopPage({
       </div>
 
       {products.length === 0 ? (
-        <p className={shell.empty}>No products match these filters. Try clearing filters or browse all products.</p>
+        <p className={shell.empty}>
+          No products match these filters. Try clearing filters or browse all products.
+        </p>
       ) : null}
 
       {total > limit && (
@@ -167,11 +206,7 @@ export default async function ShopPage({
           {page > 1 && (
             <Link
               className={shell.pagerLink}
-              href={`/shop?${(() => {
-                const p = new URLSearchParams(qs.toString());
-                p.set("page", String(page - 1));
-                return p.toString();
-              })()}`}
+              href={shopPathFromState({ ...state, page: String(page - 1) })}
               prefetch={false}
             >
               Previous
@@ -180,11 +215,7 @@ export default async function ShopPage({
           {page * limit < total && (
             <Link
               className={shell.pagerLink}
-              href={`/shop?${(() => {
-                const p = new URLSearchParams(qs.toString());
-                p.set("page", String(page + 1));
-                return p.toString();
-              })()}`}
+              href={shopPathFromState({ ...state, page: String(page + 1) })}
               prefetch={false}
             >
               Next

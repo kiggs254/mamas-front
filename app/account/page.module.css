@@ -152,25 +152,3 @@
 .shopButton:hover {
   background-color: #1e293b;
 }
-
-/* Dark mode support logic can be added here */
-@media (prefers-color-scheme: dark) {
-  .statCard {
-    background: #1e293b;
-    border-color: var(--color-heading);
-  }
-  .title, .statValue, .sectionTitle { color: var(--color-bg-light); }
-  .subtitle, .statLabel { color: var(--color-text-light); }
-  .recentActivity { border-color: var(--color-heading); }
-  .emptyState {
-    background-color: var(--color-heading);
-    border-color: var(--color-heading);
-  }
-  .emptyState h3 { color: var(--color-bg-light); }
-  .shopButton {
-    background-color: var(--color-primary);
-  }
-  .shopButton:hover {
-    background-color: var(--color-primary);
-  }
-}

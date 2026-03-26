@@ -1,5 +1,6 @@
 import HeroBanner from "./components/HeroBanner";
 import FeaturedCategories from "./components/FeaturedCategories";
+import FeaturedProducts from "./components/FeaturedProducts";
 import PromoBanners from "./components/PromoBanners";
 import PopularProducts from "./components/PopularProducts";
 import DailyBestSells from "./components/DailyBestSells";
@@ -11,6 +12,7 @@ export default function Home() {
     <>
       <HeroBanner />
       <FeaturedCategories />
+      <FeaturedProducts />
       <PromoBanners />
       <PopularProducts />
       <DailyBestSells />

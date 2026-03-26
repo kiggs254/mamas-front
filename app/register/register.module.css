@@ -221,25 +221,3 @@
   color: var(--color-primary-dark);
   text-decoration: underline;
 }
-
-/* Dark mode support logic can be added here */
-@media (prefers-color-scheme: dark) {
-  .container {
-    background-color: var(--color-heading);
-  }
-  .registerCard {
-    background: #1e293b;
-    border: 1px solid var(--color-heading);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-  }
-  .title { color: var(--color-bg-light); }
-  .subtitle { color: var(--color-text-light); }
-  .label { color: var(--color-border); }
-  .input {
-    background-color: var(--color-heading);
-    border-color: var(--color-heading);
-    color: var(--color-border);
-  }
-  .input:focus { background-color: var(--color-heading); }
-  .footer { border-color: var(--color-heading); }
-}

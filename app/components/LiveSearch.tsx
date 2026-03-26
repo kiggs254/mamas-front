@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { SearchIcon } from "./Icons";
+import { apiGet } from "@/lib/api";
 import styles from "./LiveSearch.module.css";
 
 type Result = {
@@ -20,6 +21,8 @@ type Result = {
 type Props = {
   variant?: "hero" | "header";
   categories?: { id: number; name: string; slug?: string }[];
+  /** Merged onto the root wrapper (e.g. for header grid layout) */
+  className?: string;
 };
 
 function productHref(p: Result) {
@@ -38,7 +41,7 @@ function productImage(p: Result) {
     (img as { image_url?: string })?.image_url || "";
 }
 
-export default function LiveSearch({ variant = "header", categories = [] }: Props) {
+export default function LiveSearch({ variant = "header", categories = [], className }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [categorySlug, setCategorySlug] = useState("");
@@ -49,19 +52,21 @@ export default function LiveSearch({ variant = "header", categories = [] }: Prop
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const search = useCallback(async (q: string, catSlug: string) => {
-    if (q.trim().length < 2) { setResults([]); setOpen(false); return; }
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ search: q.trim(), limit: "6" });
-      if (catSlug) params.set("category_slug", catSlug);
-      const res = await fetch(`/api/v1/storefront/products?${params}`);
-      const json = await res.json();
-      const items: Result[] = json?.data?.products || [];
-      setResults(items);
-      setOpen(items.length > 0);
-    } catch {
+    const trimmed = q.trim();
+    if (trimmed.length < 2) {
       setResults([]);
       setOpen(false);
+      return;
+    }
+    setLoading(true);
+    setOpen(true);
+    try {
+      const params = new URLSearchParams({ search: trimmed, limit: "6" });
+      if (catSlug) params.set("category_slug", catSlug);
+      const data = await apiGet<{ products: Result[] }>(`storefront/products?${params.toString()}`);
+      setResults(data?.products ?? []);
+    } catch {
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -104,7 +109,10 @@ export default function LiveSearch({ variant = "header", categories = [] }: Prop
   const isHero = variant === "hero";
 
   return (
-    <div ref={wrapRef} className={`${styles.wrap} ${isHero ? styles.hero : styles.header}`}>
+    <div
+      ref={wrapRef}
+      className={`${styles.wrap} ${isHero ? styles.hero : styles.header}${className ? ` ${className}` : ""}`}
+    >
       <form className={styles.form} onSubmit={handleSubmit}>
         {categories.length > 0 && (
           <select
@@ -126,7 +134,7 @@ export default function LiveSearch({ variant = "header", categories = [] }: Prop
           placeholder="Search for items..."
           value={query}
           onChange={(e) => handleInput(e.target.value)}
-          onFocus={() => results.length > 0 && setOpen(true)}
+          onFocus={() => query.trim().length >= 2 && setOpen(true)}
           autoComplete="off"
         />
         <button type="submit" className={styles.btn} aria-label="Search">
@@ -138,35 +146,39 @@ export default function LiveSearch({ variant = "header", categories = [] }: Prop
         </button>
       </form>
 
-      {open && (
+      {open && query.trim().length >= 2 && (
         <div className={styles.dropdown}>
           {loading && <div className={styles.loading}>Searching…</div>}
-          {!loading && results.map((p) => {
-            const img = productImage(p);
-            const href = productHref(p);
-            return (
-              <Link
-                key={p.id}
-                href={href}
-                className={styles.item}
-                onClick={() => setOpen(false)}
-                prefetch={false}
-              >
-                <span className={styles.thumb}>
-                  {img ? (
-                    <Image src={img} alt="" width={40} height={40} style={{ objectFit: "contain" }} />
-                  ) : (
-                    <span className={styles.thumbPlaceholder}>📦</span>
-                  )}
-                </span>
-                <span className={styles.info}>
-                  <span className={styles.name}>{p.name}</span>
-                  {p.category?.name && <span className={styles.cat}>{p.category.name}</span>}
-                </span>
-                <span className={styles.price}>KES {productPrice(p).toFixed(2)}</span>
-              </Link>
-            );
-          })}
+          {!loading && results.length === 0 && (
+            <div className={styles.empty}>No matching products. Try another term or browse the shop.</div>
+          )}
+          {!loading &&
+            results.map((p) => {
+              const img = productImage(p);
+              const href = productHref(p);
+              return (
+                <Link
+                  key={p.id}
+                  href={href}
+                  className={styles.item}
+                  onClick={() => setOpen(false)}
+                  prefetch={false}
+                >
+                  <span className={styles.thumb}>
+                    {img ? (
+                      <Image src={img} alt="" width={40} height={40} style={{ objectFit: "contain" }} />
+                    ) : (
+                      <span className={styles.thumbPlaceholder}>📦</span>
+                    )}
+                  </span>
+                  <span className={styles.info}>
+                    <span className={styles.name}>{p.name}</span>
+                    {p.category?.name && <span className={styles.cat}>{p.category.name}</span>}
+                  </span>
+                  <span className={styles.price}>KES {productPrice(p).toFixed(2)}</span>
+                </Link>
+              );
+            })}
           {!loading && results.length > 0 && (
             <button
               type="button"

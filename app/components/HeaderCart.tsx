@@ -35,7 +35,7 @@ export default function HeaderCart() {
       aria-label={`Shopping cart, ${countLabel}`}
     >
       <span className={styles.icon}>
-        <CartIcon size={20} />
+        <CartIcon size={22} />
       </span>
       <div className={styles.actionText}>
         <span className={styles.actionLabel}>Cart</span>

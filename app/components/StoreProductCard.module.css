@@ -1,6 +1,4 @@
 .card {
-  --card-green: #3bb77e;
-  --card-green-soft: #def9ec;
   position: relative;
   border: 2px solid #ececec;
   border-radius: 12px;
@@ -16,7 +14,7 @@
 }
 
 .card:hover {
-  border-color: rgba(59, 183, 126, 0.45);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -26,7 +24,7 @@
   left: -2px;
   z-index: 4;
   padding: 5px 9px 5px 8px;
-  background: var(--card-green);
+  background: var(--color-primary);
   color: #fff;
   font-size: 11px;
   font-weight: 800;
@@ -103,7 +101,7 @@
   align-items: center;
   justify-content: center;
   padding: 7px 10px;
-  color: var(--card-green);
+  color: var(--color-primary);
   border: none;
   background: none;
   cursor: pointer;
@@ -112,7 +110,7 @@
 }
 
 .hoverAction:hover {
-  color: #2a8f5f;
+  color: var(--color-primary-dark);
 }
 
 .hoverDivider {
@@ -132,7 +130,7 @@
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  color: var(--card-green);
+  color: var(--color-primary);
 }
 
 .wishlistInBar :global(svg) {
@@ -168,7 +166,7 @@
 }
 
 .name:hover {
-  color: var(--card-green);
+  color: var(--color-primary);
 }
 
 .ratingRow {
@@ -211,7 +209,7 @@
   font-family: var(--font-primary, inherit);
   font-weight: 800;
   font-size: 16px;
-  color: var(--card-green);
+  color: var(--color-primary);
   line-height: 1;
 }
 
@@ -224,8 +222,8 @@
 
 .addBtn {
   flex-shrink: 0;
-  background: var(--card-green-soft) !important;
-  color: var(--card-green) !important;
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
   border: none !important;
   padding: 7px 11px !important;
   border-radius: 7px !important;
@@ -240,7 +238,7 @@
 }
 
 .addBtn:hover:not(:disabled) {
-  background: var(--card-green) !important;
+  background: var(--color-primary) !important;
   color: #fff !important;
 }
 

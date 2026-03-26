@@ -6,7 +6,7 @@
 }
 
 .layoutWrapper {
-  max-width: 1200px;
+  max-width: var(--container);
   margin: 0 auto;
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -131,35 +131,5 @@
   .sidebarWrapper {
     position: static;
     margin-bottom: 2rem;
-  }
-}
-
-/* Dark mode support logic can be added here */
-@media (prefers-color-scheme: dark) {
-  .container { background-color: var(--color-heading); }
-  .sidebar, .mainContent {
-    background: #1e293b;
-    border: 1px solid var(--color-heading);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-  }
-  .sidebarTitle {
-    color: var(--color-bg-light);
-    border-color: var(--color-heading);
-  }
-  .navLink { color: var(--color-text-light); }
-  .navLink:hover {
-    background-color: var(--color-heading);
-    color: var(--color-bg-light);
-  }
-  .navLink.active {
-    background-color: var(--color-primary-light);
-    color: var(--color-primary);
-  }
-  .sidebarFooter {
-    border-color: var(--color-heading);
-    background-color: transparent;
-  }
-  .logoutButton:hover {
-    background-color: rgba(239, 68, 68, 0.1);
   }
 }
