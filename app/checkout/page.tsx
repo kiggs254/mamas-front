@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,16 @@ import { apiGet, apiPost } from "@/lib/api";
 import { productPrimaryImage } from "@/lib/products";
 import type { CartLine, StorefrontProduct, ProductVariant } from "@/types/api";
 
-type Country = { code: string; name: string; states: { code: string; name: string }[] };
+// Kenya counties — matches the backend countries.ts data
+const KENYA_COUNTIES = [
+  "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
+  "Marsabit","Isiolo","Meru","Tharaka-Nithi","Embu","Kitui","Machakos","Makueni","Nyandarua",
+  "Nyeri","Kirinyaga","Murang'a","Kiambu","Turkana","West Pokot","Samburu","Trans Nzoia",
+  "Uasin Gishu","Elgeyo-Marakwet","Nandi","Baringo","Laikipia","Nakuru","Narok","Kajiado",
+  "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
+  "Migori","Kisii","Nyamira","Nairobi City",
+];
+
 type ShipMethod = { id: number | string; name: string; cost?: string | number; type?: string };
 type Gateway = { id: number; name: string; config?: Record<string, unknown> };
 
@@ -36,7 +45,6 @@ export default function CheckoutPage() {
   const { data: cartData, mutate } = useCart();
   const items = cartData?.items || [];
 
-  const [countries, setCountries] = useState<Country[]>([]);
   const [gateways, setGateways] = useState<Gateway[]>([]);
   const [shipMethods, setShipMethods] = useState<ShipMethod[]>([]);
 
@@ -46,10 +54,8 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [address1, setAddress1] = useState("");
   const [address2, setAddress2] = useState("");
-  const [city, setCity] = useState("Nairobi");
-  const [state, setState] = useState("Nairobi");
-  const [postal, setPostal] = useState("");
-  const [countryCode, setCountryCode] = useState("KE");
+  const [city, setCity] = useState("");
+  const [county, setCounty] = useState("Nairobi City");
 
   const [coupon, setCoupon] = useState("");
   const [discountPreview, setDiscountPreview] = useState<number | null>(null);
@@ -58,14 +64,12 @@ export default function CheckoutPage() {
   const [selectedShipKey, setSelectedShipKey] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("");
 
+  const [calcBusy, setCalcBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [doneOrderId, setDoneOrderId] = useState<number | null>(null);
 
   useEffect(() => {
-    apiGet<{ countries: Country[] }>("/storefront/locations/countries")
-      .then((d) => setCountries(d.countries || []))
-      .catch(() => {});
     apiGet<{ gateways: Gateway[] }>("/storefront/checkout/payment-gateways")
       .then((d) => {
         const g = d.gateways || [];
@@ -90,6 +94,7 @@ export default function CheckoutPage() {
     [items]
   );
 
+  // Abandoned cart tracking
   useEffect(() => {
     if (!email.trim() || cartPayload.length === 0) return;
     const t = window.setTimeout(() => {
@@ -111,35 +116,44 @@ export default function CheckoutPage() {
   const discount = discountPreview ?? 0;
   const total = Math.max(0, subtotal + shipCost - discount);
 
-  const refreshShipping = async () => {
+  const refreshShipping = useCallback(async (countyOverride?: string) => {
+    const countyValue = countyOverride ?? county;
+    if (cartPayload.length === 0) return;
+    setCalcBusy(true);
     setError("");
-    if (!countryCode || cartPayload.length === 0) return;
     try {
       const res = await apiPost<{ methods: ShipMethod[] }>("/storefront/checkout/calculate-shipping", {
-        country: countryCode,
-        state,
-        city,
+        country: "Kenya",
+        state: countyValue,
+        city: city || countyValue,
         address: address1,
-        postal_code: postal,
         items: cartPayload,
       });
       const methods = res.methods || [];
       setShipMethods(methods);
       if (methods[0]?.id != null) setSelectedShipKey(String(methods[0].id));
+      else setSelectedShipKey("");
     } catch (e: unknown) {
       setShipMethods([]);
       setError(e instanceof Error ? e.message : "Could not calculate shipping");
+    } finally {
+      setCalcBusy(false);
     }
-  };
+  }, [county, city, address1, cartPayload]);
+
+  // Re-calculate shipping automatically when county changes (if cart is ready)
+  useEffect(() => {
+    if (cartPayload.length === 0) return;
+    refreshShipping(county);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [county]);
 
   const validateCoupon = async () => {
     setCouponError("");
     setDiscountPreview(null);
     if (!coupon.trim() || cartPayload.length === 0) return;
     try {
-      const res = await apiPost<{
-        discount: number;
-      }>("/storefront/checkout/validate-coupon", {
+      const res = await apiPost<{ discount: number }>("/storefront/checkout/validate-coupon", {
         coupon_code: coupon.trim(),
         items: cartPayload,
       });
@@ -150,42 +164,36 @@ export default function CheckoutPage() {
   };
 
   const placeOrder = async () => {
-    setBusy(true);
     setError("");
-    try {
-      if (!email || !address1 || !countryCode) {
-        setError("Email and street address are required.");
-        return;
-      }
-      if (!paymentMethod) {
-        setError("Select a payment method.");
-        return;
-      }
-      if (!selectedShipKey) {
-        setError("Calculate and select shipping.");
-        return;
-      }
+    if (!email || !address1) {
+      setError("Email and street address are required.");
+      return;
+    }
+    if (!paymentMethod) {
+      setError("Select a payment method.");
+      return;
+    }
+    if (!selectedShipKey) {
+      setError("Please wait for shipping to calculate, or select a shipping method.");
+      return;
+    }
 
+    setBusy(true);
+    try {
       const shipping_method_id = /^\d+$/.test(selectedShipKey) ? Number(selectedShipKey) : selectedShipKey;
 
       const orderRes = await apiPost<{ order: { id: number; order_number?: string } }>(
         "/storefront/checkout/create-order",
         {
-          customer: {
-            email,
-            first_name: firstName,
-            last_name: lastName,
-            phone,
-          },
+          customer: { email, first_name: firstName, last_name: lastName, phone },
           shipping_address: {
             first_name: firstName || "Customer",
             last_name: lastName || "",
             address_1: address1,
             address_2: address2 || undefined,
-            city,
-            state,
-            postal_code: postal,
-            country: countryCode,
+            city: city || county,
+            state: county,
+            country: "Kenya",
           },
           billing_address: { same_as_shipping: true },
           items: cartPayload,
@@ -229,10 +237,24 @@ export default function CheckoutPage() {
           </div>
         </header>
         <main className={styles.main}>
-          <div className={styles.container}>
-            <h1>Thank you!</h1>
-            <p>Your order was placed (reference #{doneOrderId}).</p>
-            <Link href="/account/orders">View orders</Link>
+          <div className={styles.successWrap}>
+            <div className={styles.successCard}>
+              <div className={styles.successIcon}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <h1 className={styles.successTitle}>Order Placed!</h1>
+              <p className={styles.successText}>
+                Thank you for your order. Your order reference is <strong>#{doneOrderId}</strong>.
+              </p>
+              <p className={styles.successText}>We&apos;ll send you a confirmation shortly.</p>
+              <div className={styles.successActions}>
+                <Link href="/account/orders" className={styles.successBtn}>View My Orders</Link>
+                <Link href="/shop" className={styles.successBtnOutline}>Continue Shopping</Link>
+              </div>
+            </div>
           </div>
         </main>
       </div>
@@ -256,161 +278,206 @@ export default function CheckoutPage() {
       <main className={styles.main}>
         <div className={styles.container}>
           {items.length === 0 ? (
-            <p>
-              Your cart is empty. <Link href="/shop">Shop</Link>
-            </p>
+            <div className={styles.emptyCart}>
+              <p>Your cart is empty.</p>
+              <Link href="/shop" className={styles.submitBtn} style={{ display: "inline-flex", width: "auto" }}>
+                Shop Now
+              </Link>
+            </div>
           ) : (
             <>
               <div className={styles.formsPanel}>
-                {error && <p style={{ color: "coral", marginBottom: 12 }}>{error}</p>}
+                {error && <div className={styles.errorBanner}>{error}</div>}
 
+                {/* Step 1: Contact */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>
                     <span className={styles.stepNumber}>1</span> Contact Information
                   </h2>
                   <div className={styles.formGrid}>
-                    <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
-                      <label>Email Address</label>
+                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
+                      <label>Email Address *</label>
                       <input
                         type="email"
                         className={styles.input}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        placeholder="you@example.com"
                       />
                     </div>
                     <div className={styles.inputGroup}>
                       <label>First Name</label>
-                      <input className={styles.input} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                      <input className={styles.input} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" />
                     </div>
                     <div className={styles.inputGroup}>
                       <label>Last Name</label>
-                      <input className={styles.input} value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                      <input className={styles.input} value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
                     </div>
-                    <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
+                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
                       <label>Phone Number</label>
-                      <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} />
+                      <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+254 700 000 000" />
                     </div>
                   </div>
                 </div>
 
+                {/* Step 2: Shipping */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>
-                    <span className={styles.stepNumber}>2</span> Shipping Address
+                    <span className={styles.stepNumber}>2</span> Delivery Address
                   </h2>
+                  <div className={styles.kenyaBadge}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Kenya
+                  </div>
                   <div className={styles.formGrid}>
-                    <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
-                      <label>Country</label>
+                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
+                      <label>Street Address *</label>
+                      <input className={styles.input} value={address1} onChange={(e) => setAddress1(e.target.value)} placeholder="e.g. 123 Uhuru Highway" />
+                    </div>
+                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
+                      <label>Apartment / Building (optional)</label>
+                      <input className={styles.input} value={address2} onChange={(e) => setAddress2(e.target.value)} placeholder="Apt, suite, floor..." />
+                    </div>
+                    <div className={styles.inputGroup}>
+                      <label>Town / City</label>
+                      <input className={styles.input} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Nairobi" />
+                    </div>
+                    <div className={styles.inputGroup}>
+                      <label>County *</label>
                       <select
                         className={styles.select}
-                        value={countryCode}
-                        onChange={(e) => setCountryCode(e.target.value)}
+                        value={county}
+                        onChange={(e) => setCounty(e.target.value)}
                       >
-                        {countries.map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.name}
-                          </option>
+                        {KENYA_COUNTIES.map((c) => (
+                          <option key={c} value={c}>{c}</option>
                         ))}
                       </select>
                     </div>
-                    <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
-                      <label>Street Address</label>
-                      <input className={styles.input} value={address1} onChange={(e) => setAddress1(e.target.value)} />
-                    </div>
-                    <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
-                      <label>Apartment (optional)</label>
-                      <input className={styles.input} value={address2} onChange={(e) => setAddress2(e.target.value)} />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>City</label>
-                      <input className={styles.input} value={city} onChange={(e) => setCity(e.target.value)} />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>State / County</label>
-                      <input className={styles.input} value={state} onChange={(e) => setState(e.target.value)} />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>Postal code</label>
-                      <input className={styles.input} value={postal} onChange={(e) => setPostal(e.target.value)} />
-                    </div>
-                    <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
-                      <button type="button" className={styles.submitBtn} onClick={refreshShipping}>
-                        Calculate shipping
-                      </button>
-                    </div>
-                    {shipMethods.length > 0 && (
-                      <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
+                  </div>
+
+                  {/* Shipping methods */}
+                  <div className={styles.shippingBox}>
+                    {calcBusy ? (
+                      <div className={styles.shippingLoading}>
+                        <span className={styles.spinnerDark} />
+                        Calculating shipping for {county}…
+                      </div>
+                    ) : shipMethods.length === 0 ? (
+                      <div className={styles.shippingEmpty}>
+                        <button type="button" className={styles.calcBtn} onClick={() => refreshShipping()} disabled={calcBusy}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+                          Check shipping rates
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={styles.inputGroup}>
                         <label>Shipping method</label>
-                        <select
-                          className={styles.select}
-                          value={selectedShipKey}
-                          onChange={(e) => setSelectedShipKey(e.target.value)}
-                        >
+                        <div className={styles.shipMethodList}>
                           {shipMethods.map((m) => (
-                            <option key={String(m.id)} value={String(m.id)}>
-                              {m.name} — KES {Number(m.cost || 0).toFixed(2)}
-                            </option>
+                            <label
+                              key={String(m.id)}
+                              className={`${styles.shipMethodOption} ${selectedShipKey === String(m.id) ? styles.shipMethodActive : ""}`}
+                            >
+                              <input
+                                type="radio"
+                                name="shipping"
+                                value={String(m.id)}
+                                checked={selectedShipKey === String(m.id)}
+                                onChange={() => setSelectedShipKey(String(m.id))}
+                              />
+                              <span className={styles.shipMethodName}>{m.name}</span>
+                              <span className={styles.shipMethodCost}>
+                                {Number(m.cost || 0) === 0 ? "Free" : `KES ${Number(m.cost).toFixed(2)}`}
+                              </span>
+                            </label>
                           ))}
-                        </select>
+                        </div>
+                        <button type="button" className={styles.recalcLink} onClick={() => refreshShipping()} disabled={calcBusy}>
+                          {calcBusy ? "Recalculating…" : "↺ Recalculate"}
+                        </button>
                       </div>
                     )}
                   </div>
                 </div>
 
+                {/* Step 3: Coupon */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>
-                    <span className={styles.stepNumber}>3</span> Coupon
+                    <span className={styles.stepNumber}>3</span> Coupon Code
                   </h2>
-                  <div className={styles.formGrid}>
-                    <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
-                      <label>Coupon code</label>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <input className={styles.input} value={coupon} onChange={(e) => setCoupon(e.target.value)} />
-                        <button type="button" className={styles.submitBtn} onClick={validateCoupon}>
-                          Apply
-                        </button>
-                      </div>
-                      {couponError && <p style={{ color: "coral", fontSize: 13 }}>{couponError}</p>}
-                      {discountPreview != null && discountPreview > 0 && (
-                        <p style={{ color: "green", fontSize: 14 }}>Discount: KES {discountPreview.toFixed(2)}</p>
-                      )}
-                    </div>
+                  <div className={styles.couponRow}>
+                    <input
+                      className={styles.input}
+                      value={coupon}
+                      onChange={(e) => setCoupon(e.target.value)}
+                      placeholder="Enter coupon code"
+                    />
+                    <button type="button" className={styles.couponBtn} onClick={validateCoupon}>
+                      Apply
+                    </button>
                   </div>
+                  {couponError && <p className={styles.couponError}>{couponError}</p>}
+                  {discountPreview != null && discountPreview > 0 && (
+                    <p className={styles.couponSuccess}>Discount: KES {discountPreview.toFixed(2)}</p>
+                  )}
                 </div>
 
+                {/* Step 4: Payment */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>
                     <span className={styles.stepNumber}>4</span> Payment Method
                   </h2>
-                  <div className={styles.paymentOptions}>
-                    {gateways.map((g) => (
-                      <label
-                        key={g.id}
-                        className={`${styles.paymentOption} ${paymentMethod === g.name ? styles.active : ""}`}
-                      >
-                        <input
-                          type="radio"
-                          name="payment"
-                          value={g.name}
-                          checked={paymentMethod === g.name}
-                          onChange={() => setPaymentMethod(g.name)}
-                        />
-                        <div className={styles.paymentInfo}>
-                          <span className={styles.paymentName}>{g.name}</span>
-                          <span className={styles.paymentDesc}>
-                            {(g.config?.description as string) || (g.config?.title as string) || " "}
-                          </span>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                  {gateways.length === 0 ? (
+                    <p className={styles.noGateways}>Loading payment options…</p>
+                  ) : (
+                    <div className={styles.paymentOptions}>
+                      {gateways.map((g) => (
+                        <label
+                          key={g.id}
+                          className={`${styles.paymentOption} ${paymentMethod === g.name ? styles.active : ""}`}
+                        >
+                          <input
+                            type="radio"
+                            name="payment"
+                            value={g.name}
+                            checked={paymentMethod === g.name}
+                            onChange={() => setPaymentMethod(g.name)}
+                          />
+                          <div className={styles.paymentInfo}>
+                            <span className={styles.paymentName}>{g.name}</span>
+                            <span className={styles.paymentDesc}>
+                              {(g.config?.description as string) || (g.config?.title as string) || ""}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <button type="button" className={styles.submitBtn} disabled={busy} onClick={placeOrder}>
-                  {busy ? "Placing order…" : "Place Order"} <ArrowRightIcon size={16} color="white" />
+                {/* Place order */}
+                <button
+                  type="button"
+                  className={`${styles.submitBtn} ${busy ? styles.submitBusy : ""}`}
+                  disabled={busy}
+                  onClick={placeOrder}
+                >
+                  {busy ? (
+                    <>
+                      <span className={styles.spinner} />
+                      Placing order…
+                    </>
+                  ) : (
+                    <>
+                      Place Order <ArrowRightIcon size={16} color="white" />
+                    </>
+                  )}
                 </button>
               </div>
 
+              {/* Order Summary */}
               <div className={styles.summaryContainer}>
                 <div className={styles.summaryPanel}>
                   <h2 className={styles.summaryTitle}>Order Summary</h2>
@@ -444,12 +511,18 @@ export default function CheckoutPage() {
                     </div>
                     <div className={styles.totalRow}>
                       <span>Shipping</span>
-                      <span>KES {shipCost.toFixed(2)}</span>
+                      <span>
+                        {calcBusy ? (
+                          <span className={styles.calcingText}>Calculating…</span>
+                        ) : (
+                          `KES ${shipCost.toFixed(2)}`
+                        )}
+                      </span>
                     </div>
                     {discount > 0 && (
                       <div className={styles.totalRow}>
                         <span>Discount</span>
-                        <span>-KES {discount.toFixed(2)}</span>
+                        <span className={styles.discountAmt}>-KES {discount.toFixed(2)}</span>
                       </div>
                     )}
                     <div className={styles.totalRow}>
@@ -469,7 +542,7 @@ export default function CheckoutPage() {
       </main>
 
       <footer className={styles.footer}>
-        <p>© 2024 Cleanshelf Supermarket. All rights reserved. Secured by SSL Checkout.</p>
+        <p>© {new Date().getFullYear()} Cleanshelf Supermarket. All rights reserved. Secured by SSL.</p>
       </footer>
     </div>
   );

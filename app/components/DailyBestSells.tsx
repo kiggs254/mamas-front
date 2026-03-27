@@ -15,13 +15,13 @@ import { ArrowRightIcon } from "./Icons";
 import { getCustomer } from "@/lib/auth";
 import DailyBestSellsClient, { type DailyProduct } from "./DailyBestSellsClient";
 
-const TABS = ["All", "Deals Of the Day", "Beauty", "Bread & Juice", "Drinks", "Milks"];
+const TABS = ["All", "On Sale", "Beauty", "Bread & Juice", "Drinks", "Milks"];
 
 export default async function DailyBestSells() {
   const [products, customer] = await Promise.all([
     fetchStorefrontProductsWithFallback(
-      { sort: "best_sellers", limit: 12 },
-      [{ sort: "newest", limit: 12 }],
+      { on_sale: true, limit: 12 },
+      [{ sort: "best_sellers", limit: 12 }, { sort: "newest", limit: 12 }],
     ),
     getCustomer(),
   ]);
