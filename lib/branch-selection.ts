@@ -1,6 +1,27 @@
 const BRANCH_KEY = "cleanshelf_branch";
 const LEGACY_KEY = "cleanshelf_location";
 
+/** HttpOnly=false cookie so Next.js server components can scope product lists to the selected branch. */
+export const BRANCH_ID_COOKIE = "cleanshelf_branch_id";
+
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+function setBranchIdCookie(id: string | null) {
+  if (typeof document === "undefined") return;
+  if (id && /^\d+$/.test(id.trim())) {
+    const v = id.trim();
+    document.cookie = `${BRANCH_ID_COOKIE}=${encodeURIComponent(v)};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax`;
+  } else {
+    document.cookie = `${BRANCH_ID_COOKIE}=;path=/;max-age=0`;
+  }
+}
+
+/** Keep cookie in sync with localStorage (also run on app load for older sessions). */
+export function syncBranchCookieFromSelection(b: SelectedBranch | null) {
+  const id = b && /^\d+$/.test(String(b.id).trim()) ? String(b.id).trim() : null;
+  setBranchIdCookie(id);
+}
+
 export type SelectedBranch = { id: string; name: string; city?: string };
 
 export function readSelectedBranch(): SelectedBranch | null {
@@ -32,6 +53,7 @@ export function writeSelectedBranch(b: SelectedBranch) {
   if (typeof window === "undefined") return;
   localStorage.setItem(BRANCH_KEY, JSON.stringify(b));
   localStorage.removeItem(LEGACY_KEY);
+  syncBranchCookieFromSelection(b);
 }
 
 export function headerLocationLabel(b: SelectedBranch | null): string {

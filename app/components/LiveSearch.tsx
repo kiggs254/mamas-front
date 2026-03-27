@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SearchIcon } from "./Icons";
 import { apiGet } from "@/lib/api";
+import { readSelectedBranch } from "@/lib/branch-selection";
 import styles from "./LiveSearch.module.css";
 
 type Result = {
@@ -63,6 +64,10 @@ export default function LiveSearch({ variant = "header", categories = [], classN
     try {
       const params = new URLSearchParams({ search: trimmed, limit: "6" });
       if (catSlug) params.set("category_slug", catSlug);
+      const sel = readSelectedBranch();
+      if (sel?.id && /^\d+$/.test(String(sel.id).trim())) {
+        params.set("branch_id", String(sel.id).trim());
+      }
       const data = await apiGet<{ products: Result[] }>(`storefront/products?${params.toString()}`);
       setResults(data?.products ?? []);
     } catch {

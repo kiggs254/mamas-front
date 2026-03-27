@@ -21,6 +21,7 @@ import {
   shopPathFromState,
   type ShopQueryState,
 } from "@/lib/shop-query";
+import { getStorefrontBranchIdCookie } from "@/lib/branch-cookie-server";
 
 function slugToTitle(slug: string): string {
   return slug
@@ -67,6 +68,8 @@ export default async function ShopPage({
   const tagSlug = state.tag_slug || "";
 
   const apiQs = buildProductsApiQueryString(state);
+  const branchId = await getStorefrontBranchIdCookie();
+  const bq = branchId != null ? `&branch_id=${branchId}` : "";
 
   const [data, customer, catData, cheapData, priceyData] = await Promise.all([
     serverApiGet<{
@@ -74,11 +77,11 @@ export default async function ShopPage({
       total: number;
       page: number;
       limit: number;
-    }>(`/storefront/products?${apiQs}`),
+    }>(`/storefront/products?${apiQs}${bq}`),
     getCustomer(),
     serverApiGet<{ categories: StorefrontCategory[] }>("/storefront/categories"),
-    serverApiGet<{ products: StorefrontProduct[] }>("/storefront/products?limit=1&sort=price_asc"),
-    serverApiGet<{ products: StorefrontProduct[] }>("/storefront/products?limit=1&sort=price_desc"),
+    serverApiGet<{ products: StorefrontProduct[] }>(`/storefront/products?limit=1&sort=price_asc${bq}`),
+    serverApiGet<{ products: StorefrontProduct[] }>(`/storefront/products?limit=1&sort=price_desc${bq}`),
   ]);
 
   const products = data?.products || [];

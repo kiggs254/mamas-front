@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import styles from "./LocationPicker.module.css";
 import { SearchIcon } from "./Icons";
 import { apiGet } from "@/lib/api";
@@ -19,6 +20,7 @@ function matchesSearch(store: StoreLocatorBranch, q: string): boolean {
 }
 
 export default function LocationPicker() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [stores, setStores] = useState<StoreLocatorBranch[] | null>(null);
@@ -60,6 +62,7 @@ export default function LocationPicker() {
     writeSelectedBranch({ id: store.id, name: store.name, city: store.city });
     setIsOpen(false);
     window.dispatchEvent(new Event("locationChange"));
+    router.refresh();
   };
 
   const filteredStores =

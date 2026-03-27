@@ -1,5 +1,6 @@
 import { serverApiGet } from "@/lib/server-api";
 import type { StorefrontProduct } from "@/types/api";
+import { getStorefrontBranchIdCookie } from "@/lib/branch-cookie-server";
 
 function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
   const qs = new URLSearchParams();
@@ -16,7 +17,9 @@ export async function fetchStorefrontProducts(
   params: Record<string, string | number | boolean | undefined>,
 ): Promise<StorefrontProduct[]> {
   const q = buildQuery(params);
-  const data = await serverApiGet<{ products: StorefrontProduct[] }>(`/storefront/products${q}`);
+  const branchId = await getStorefrontBranchIdCookie();
+  const branchPart = branchId != null ? `${q.includes("?") ? "&" : "?"}branch_id=${branchId}` : "";
+  const data = await serverApiGet<{ products: StorefrontProduct[] }>(`/storefront/products${q}${branchPart}`);
   return data?.products ?? [];
 }
 
