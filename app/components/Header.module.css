@@ -47,7 +47,7 @@
 }
 
 .middleBar {
-  padding: 20px 0;
+  padding: 0;
 }
 
 .middleBarInner {
@@ -58,18 +58,21 @@
   align-items: center;
   justify-content: space-between;
   gap: 30px;
+  height: 72px;
 }
 
 .logo {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  align-self: center;
 }
 
 .logoImage {
-  height: 40px;
+  height: 48px;
   width: auto;
   object-fit: contain;
+  display: block;
 }
 
 .searchBar {
@@ -298,7 +301,7 @@ a.headerAction {
   }
 
   .middleBar {
-    padding: 12px 0 14px;
+    padding: 0;
   }
 
   .middleBarInner {
@@ -308,6 +311,9 @@ a.headerAction {
     align-items: center;
     column-gap: 10px;
     row-gap: 12px;
+    height: auto;
+    padding-top: 12px;
+    padding-bottom: 14px;
   }
 
   .mobileNavWrap {
@@ -326,6 +332,7 @@ a.headerAction {
   .logoImage {
     height: 36px;
     max-width: min(200px, 52vw);
+    display: block;
   }
 
   .headerActions {
