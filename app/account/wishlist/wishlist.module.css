@@ -1,10 +1,72 @@
 .page {
-  padding: 8px 0 32px;
+  padding: 2rem;
+}
+
+.pageHeader {
+  margin-bottom: 2rem;
 }
 
 .title {
-  font-size: 26px;
-  margin-bottom: 20px;
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--color-heading);
+  margin: 0 0 4px;
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 56px 24px;
+  background: var(--color-bg-light);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.emptyIcon {
+  color: var(--color-text-light);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.emptyState h3 {
+  font-family: var(--font-primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0 0 8px;
+}
+
+.emptyState p {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  margin: 0 0 24px;
+}
+
+.shopBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-primary);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.shopBtn:hover {
+  background: var(--color-primary-dark);
+  color: #fff;
 }
 
 .list {
@@ -13,40 +75,163 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .card {
   display: flex;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  gap: 18px;
+  padding: 18px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   align-items: flex-start;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.08);
 }
 
 .thumb {
   flex-shrink: 0;
-  background: #fafafa;
-  border-radius: 8px;
+  background: var(--color-bg-light);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 80px;
-  min-height: 80px;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+}
+
+.noImg {
+  color: var(--color-text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .body {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .name {
-  font-weight: 600;
-  color: inherit;
+  font-family: var(--font-primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-heading);
   text-decoration: none;
+  line-height: 1.3;
+}
+
+.name:hover {
+  color: var(--color-primary);
+}
+
+.category {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .price {
-  margin-top: 6px;
+  font-family: var(--font-primary);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--color-primary);
+}
+
+.oldPrice {
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  text-decoration: line-through;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.addCartBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
   font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.addCartBtn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.addCartBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.removeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: white;
+  color: var(--color-text);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.removeBtn:hover:not(:disabled) {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+.removeBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 1.25rem;
+  }
+
+  .card {
+    flex-direction: column;
+  }
+
+  .thumb {
+    width: 80px;
+    height: 80px;
+  }
 }

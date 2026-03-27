@@ -1,73 +1,121 @@
 import Link from "next/link";
-import { Package, Clock, Star, TrendingUp } from "lucide-react";
 import { getCustomer } from "@/lib/auth";
 import { serverApiGet } from "@/lib/server-api";
+import type { OrderSummary } from "@/types/api";
 import styles from "./page.module.css";
+
+function statusClass(status: string) {
+  const s = (status || "pending").toLowerCase();
+  return s;
+}
+
+function formatDate(d?: string) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
+}
 
 export default async function AccountDashboard() {
   const customer = await getCustomer();
-  const ordersData = await serverApiGet<{ orders: unknown[]; total: number }>("/storefront/customer/orders?limit=5");
+  const ordersData = await serverApiGet<{ orders: OrderSummary[]; total: number }>(
+    "/storefront/customer/orders?limit=5"
+  );
   const wishData = await serverApiGet<{ items: unknown[] }>("/storefront/wishlist");
 
   const orderCount = ordersData?.total ?? 0;
+  const recentOrders = ordersData?.orders || [];
   const wishCount = wishData?.items?.length ?? 0;
   const first = customer?.first_name || "there";
-
-  const stats = [
-    { label: "Total Orders", value: String(orderCount), icon: Package, color: "#3b82f6" },
-    { label: "Wishlist", value: String(wishCount), icon: Star, color: "#ec4899" },
-    { label: "Account", value: "Active", icon: TrendingUp, color: "#10b981" },
-    { label: "Support", value: "24/7", icon: Clock, color: "#f59e0b" },
-  ];
+  const initials = [customer?.first_name, customer?.last_name]
+    .filter(Boolean)
+    .map((n) => n!.charAt(0).toUpperCase())
+    .join("") || "?";
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Welcome back, {first}!</h1>
-        <p className={styles.subtitle}>Here&apos;s an overview of your account activity.</p>
+      <div className={styles.heroRow}>
+        <div className={styles.avatarLg}>{initials}</div>
+        <div>
+          <h1 className={styles.title}>Welcome back, {first}!</h1>
+          <p className={styles.subtitle}>{customer?.email}</p>
+        </div>
       </div>
 
       <div className={styles.statsGrid}>
-        {stats.map((stat, idx) => (
-          <div key={idx} className={styles.statCard}>
-            <div
-              className={styles.iconWrapper}
-              style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
-            >
-              <stat.icon size={24} />
-            </div>
-            <div className={styles.statInfo}>
-              <p className={styles.statValue}>{stat.value}</p>
-              <p className={styles.statLabel}>{stat.label}</p>
-            </div>
+        <Link href="/account/orders" className={styles.statCard}>
+          <div className={styles.statIconWrap} data-color="primary">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           </div>
-        ))}
+          <div className={styles.statInfo}>
+            <p className={styles.statValue}>{orderCount}</p>
+            <p className={styles.statLabel}>Total Orders</p>
+          </div>
+        </Link>
+
+        <Link href="/account/wishlist" className={styles.statCard}>
+          <div className={styles.statIconWrap} data-color="pink">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div className={styles.statInfo}>
+            <p className={styles.statValue}>{wishCount}</p>
+            <p className={styles.statLabel}>Wishlist Items</p>
+          </div>
+        </Link>
+
+        <Link href="/account/addresses" className={styles.statCard}>
+          <div className={styles.statIconWrap} data-color="blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div className={styles.statInfo}>
+            <p className={styles.statValue}>Active</p>
+            <p className={styles.statLabel}>Account</p>
+          </div>
+        </Link>
+
+        <Link href="/account/subscriptions" className={styles.statCard}>
+          <div className={styles.statIconWrap} data-color="amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          </div>
+          <div className={styles.statInfo}>
+            <p className={styles.statValue}>24/7</p>
+            <p className={styles.statLabel}>Support</p>
+          </div>
+        </Link>
       </div>
 
-      <div className={styles.recentActivity}>
+      <div className={styles.recentSection}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Recent Activity</h2>
-          <Link href="/account/orders" className={styles.viewAll}>
-            View All Orders
-          </Link>
+          <h2 className={styles.sectionTitle}>Recent Orders</h2>
+          <Link href="/account/orders" className={styles.viewAll}>View all orders</Link>
         </div>
 
-        {orderCount === 0 ? (
+        {recentOrders.length === 0 ? (
           <div className={styles.emptyState}>
-            <div className={styles.emptyStateIcon}>
-              <Package size={48} />
+            <div className={styles.emptyIcon}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             </div>
-            <h3>No recent orders</h3>
-            <p>You haven&apos;t placed any orders recently. Start shopping to see them here.</p>
-            <Link href="/shop" className={styles.shopButton}>
-              Continue Shopping
-            </Link>
+            <h3>No orders yet</h3>
+            <p>Start shopping and your orders will appear here.</p>
+            <Link href="/shop" className={styles.shopBtn}>Browse products</Link>
           </div>
         ) : (
-          <p style={{ color: "#666" }}>
-            You have <strong>{orderCount}</strong> order(s).{" "}
-            <Link href="/account/orders">View history</Link>
-          </p>
+          <div className={styles.recentList}>
+            {recentOrders.map((order) => (
+              <Link key={order.id} href={`/account/orders/${order.id}`} className={styles.recentCard}>
+                <div className={styles.recentCardLeft}>
+                  <span className={styles.recentOrderNum}>{order.order_number || `#${order.id}`}</span>
+                  <span className={styles.recentDate}>{formatDate(order.created_at)}</span>
+                </div>
+                <div className={styles.recentCardRight}>
+                  <span className={`${styles.miniStatusBadge} ${styles[statusClass(order.status || "pending")]}`}>
+                    {order.status || "pending"}
+                  </span>
+                  <span className={styles.recentTotal}>
+                    {order.currency || "KES"} {order.total != null ? Number(order.total).toFixed(2) : "—"}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         )}
       </div>
     </div>

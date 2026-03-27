@@ -154,3 +154,76 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+.readonlyInput {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background-color: var(--color-bg-light);
+}
+
+.hint {
+  color: var(--color-text-light);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.errorClose {
+  background: none;
+  border: none;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.errorClose:hover {
+  background: #fecaca;
+}
+
+.infoCallout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  margin-top: 1.5rem;
+  color: #1e40af;
+}
+
+.infoIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.infoCallout strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.infoCallout p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #1e3a8a;
+}

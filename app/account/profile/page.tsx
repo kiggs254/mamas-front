@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User, Mail, Phone, Save } from "lucide-react";
+import { User, Mail, Phone, Save, Info } from "lucide-react";
 import { apiGet, apiPut } from "@/lib/api";
 import type { Customer } from "@/types/api";
 import styles from "./profile.module.css";
@@ -9,6 +9,7 @@ import styles from "./profile.module.css";
 export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -27,7 +28,7 @@ export default function ProfilePage() {
           phone: c.phone || "",
         });
       })
-      .catch(() => {});
+      .catch(() => setError("Failed to load profile data."));
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +38,7 @@ export default function ProfilePage() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setError(null);
     try {
       await apiPut("/storefront/customer/profile", {
         first_name: formData.first_name,
@@ -45,8 +47,9 @@ export default function ProfilePage() {
       });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch {
-      /* show error */
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save profile. Please try again.";
+      setError(msg);
     } finally {
       setIsSaving(false);
     }
@@ -58,6 +61,13 @@ export default function ProfilePage() {
         <h1 className={styles.title}>Profile Information</h1>
         <p className={styles.subtitle}>Update your account details and settings.</p>
       </div>
+
+      {error && (
+        <div className={styles.errorBanner} role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={() => setError(null)} className={styles.errorClose} aria-label="Dismiss">✕</button>
+        </div>
+      )}
 
       <div className={styles.card}>
         <form onSubmit={handleSaveProfile} className={styles.form}>
@@ -104,7 +114,7 @@ export default function ProfilePage() {
               </label>
               <div className={styles.inputWrapper}>
                 <Mail className={styles.inputIcon} size={20} />
-                <input id="email" name="email" type="email" value={formData.email} className={styles.input} readOnly />
+                <input id="email" name="email" type="email" value={formData.email} className={`${styles.input} ${styles.readonlyInput}`} readOnly />
               </div>
             </div>
 
@@ -119,10 +129,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <p className={styles.hint} style={{ marginTop: 8, fontSize: 13, color: "#666" }}>
-            Password changes are not available via the storefront API; contact support if needed.
-          </p>
-
           <div className={styles.actions}>
             {success && <span className={styles.successMessage}>Profile updated successfully!</span>}
             <button type="submit" disabled={isSaving} className={`${styles.saveButton} ${isSaving ? styles.loading : ""}`}>
@@ -131,6 +137,14 @@ export default function ProfilePage() {
             </button>
           </div>
         </form>
+      </div>
+
+      <div className={styles.infoCallout}>
+        <Info size={18} className={styles.infoIcon} />
+        <div>
+          <strong>Need to change your password?</strong>
+          <p>Password changes are managed by our support team. Please contact us and we&apos;ll assist you promptly.</p>
+        </div>
       </div>
     </div>
   );

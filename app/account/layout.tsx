@@ -15,7 +15,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
     <div className={styles.container}>
       <div className={styles.layoutWrapper}>
         <aside className={styles.sidebarWrapper}>
-          <SidebarNav />
+          <SidebarNav firstName={customer.first_name ?? undefined} lastName={customer.last_name ?? undefined} email={customer.email} />
         </aside>
         <main className={styles.mainContent}>
           {children}

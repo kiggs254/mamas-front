@@ -217,3 +217,168 @@
   background-color: var(--color-primary-light);
   color: var(--color-primary);
 }
+
+/* ========================
+   Address Form Card
+   ======================== */
+.formCard {
+  background: white;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(26, 140, 58, 0.1);
+}
+
+.formTitle {
+  font-family: var(--font-primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0 0 1.25rem;
+}
+
+.formError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.formError button {
+  background: none;
+  border: none;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 5px;
+  flex-shrink: 0;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.span2 {
+  grid-column: span 2;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.req {
+  color: #ef4444;
+}
+
+.input {
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--color-heading);
+  background: var(--color-bg-light);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  background: white;
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.saveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.65rem 1.25rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.saveBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.65rem 1.1rem;
+  background: white;
+  color: var(--color-text);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.cancelBtn:hover {
+  border-color: var(--color-heading);
+  color: var(--color-heading);
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 480px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .span2 {
+    grid-column: span 1;
+  }
+}
