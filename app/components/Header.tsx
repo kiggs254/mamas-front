@@ -36,7 +36,9 @@ export default async function Header() {
       <div className={styles.topBar}>
         <div className={styles.topBarInner}>
           <div className={styles.topBarLeft}>
-            <HeaderLocation />
+            <div className={styles.topBarLocation}>
+              <HeaderLocation />
+            </div>
             <Link href={customer ? "/account" : "/login"} style={{ textDecoration: "none", color: "inherit" }}>
               <span>
                 <UserIcon size={13} /> {customer ? "My Account" : "Sign In / Register"}
@@ -110,6 +112,9 @@ export default async function Header() {
                 <span className={styles.actionLabel}>{firstName || "Account"}</span>
               </div>
             </Link>
+          </div>
+          <div className={styles.mobileLocationWrap}>
+            <HeaderLocation className={styles.mobileLocationBtn} />
           </div>
         </div>
       </div>

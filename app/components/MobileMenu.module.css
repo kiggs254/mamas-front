@@ -73,6 +73,39 @@
   flex-shrink: 0;
 }
 
+.storePickerBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% - 8px);
+  margin: 4px 4px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-primary);
+  font-family: var(--font-primary);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.storePickerBtn:active {
+  background: var(--color-bg-light);
+  border-color: var(--color-primary);
+}
+
+.storePickerLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .panelTitle {
   font-family: var(--font-primary);
   font-size: 17px;

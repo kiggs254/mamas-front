@@ -31,6 +31,10 @@
   gap: 4px;
 }
 
+.topBarLocation {
+  display: block;
+}
+
 .topBarRight {
   display: flex;
   gap: 15px;
@@ -298,8 +302,16 @@ a.headerAction {
   flex-shrink: 0;
 }
 
+.mobileLocationWrap {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .topBar {
+    display: none;
+  }
+
+  .topBarLocation {
     display: none;
   }
 
@@ -310,10 +322,10 @@ a.headerAction {
   .middleBarInner {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto;
     align-items: center;
     column-gap: 10px;
-    row-gap: 12px;
+    row-gap: 10px;
     height: auto;
     padding-top: 12px;
     padding-bottom: 14px;
@@ -345,9 +357,34 @@ a.headerAction {
     flex-wrap: nowrap;
   }
 
-  .headerSearchSlot {
+  .mobileLocationWrap {
+    display: flex;
     grid-column: 1 / -1;
     grid-row: 2;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobileLocationBtn {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 14px !important;
+    box-sizing: border-box;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobileLocationBtn:active {
+    background: var(--color-bg-light);
+  }
+
+  .headerSearchSlot {
+    grid-column: 1 / -1;
+    grid-row: 3;
     width: 100%;
     max-width: none;
   }

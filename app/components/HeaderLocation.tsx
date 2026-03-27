@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { LocationIcon } from "./Icons";
 import { headerLocationLabel, readSelectedBranch } from "@/lib/branch-selection";
 
-export default function HeaderLocation() {
+type Props = {
+  /** Extra classes (e.g. mobile full-width row in `Header.module.css`). */
+  className?: string;
+};
+
+export default function HeaderLocation({ className }: Props) {
   const [location, setLocation] = useState("Select Location");
 
   useEffect(() => {
@@ -25,15 +30,24 @@ export default function HeaderLocation() {
   };
 
   return (
-    <span 
-      onClick={openPicker} 
-      style={{ 
-        cursor: 'pointer', 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '4px',
-        color: 'var(--color-primary)',
-        fontWeight: 600
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={openPicker}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openPicker();
+        }
+      }}
+      className={className}
+      style={{
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        color: "var(--color-primary)",
+        fontWeight: 600,
       }}
       title="Click to change your branch"
     >
