@@ -66,6 +66,7 @@
   align-items: center;
   flex-shrink: 0;
   align-self: center;
+  min-width: 200px;
 }
 
 .logoImage {
@@ -213,6 +214,8 @@ a.headerAction {
   font-family: var(--font-primary);
   border-radius: var(--radius-sm);
   transition: var(--transition);
+  min-width: 200px;
+  white-space: nowrap;
 }
 
 .browseBtn:hover {
