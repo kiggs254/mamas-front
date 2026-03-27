@@ -8,6 +8,7 @@ import styles from "./Checkout.module.css";
 import { ShieldIcon, ArrowRightIcon } from "../components/Icons";
 import { useCart } from "@/hooks/useCart";
 import { apiGet, apiPost } from "@/lib/api";
+import { readSelectedBranch } from "@/lib/branch-selection";
 import { productPrimaryImage } from "@/lib/products";
 import type { CartLine, StorefrontProduct, ProductVariant } from "@/types/api";
 
@@ -23,6 +24,12 @@ const KENYA_COUNTIES = [
 
 type ShipMethod = { id: number | string; name: string; cost?: string | number; type?: string };
 type Gateway = { id: number; name: string; config?: Record<string, unknown> };
+
+function parseNumericBranchId(id: string | undefined): number | undefined {
+  if (!id || !/^\d+$/.test(String(id).trim())) return undefined;
+  const n = Number(id);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
 
 function lineUnitPrice(line: CartLine): number {
   const v = line.variant as ProductVariant | null | undefined;
@@ -69,15 +76,40 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [doneOrderId, setDoneOrderId] = useState<number | null>(null);
 
+  const [checkoutBranchId, setCheckoutBranchId] = useState<number | undefined>(undefined);
+  const [branchesEnabledShop, setBranchesEnabledShop] = useState(false);
+
   useEffect(() => {
-    apiGet<{ gateways: Gateway[] }>("/storefront/checkout/payment-gateways")
+    const syncBranch = () => {
+      const sel = readSelectedBranch();
+      setCheckoutBranchId(parseNumericBranchId(sel?.id));
+    };
+    syncBranch();
+    window.addEventListener("locationChange", syncBranch);
+    return () => window.removeEventListener("locationChange", syncBranch);
+  }, []);
+
+  useEffect(() => {
+    apiGet<{ settings: Record<string, string> }>("/storefront/settings")
+      .then((d) => {
+        const s = d?.settings;
+        setBranchesEnabledShop(s?.branches_enabled === "true");
+      })
+      .catch(() => {});
+  }, []);
+
+  const branchIdForApi = branchesEnabledShop && checkoutBranchId != null ? checkoutBranchId : undefined;
+
+  useEffect(() => {
+    const q = branchIdForApi != null ? `?branch_id=${branchIdForApi}` : "";
+    apiGet<{ gateways: Gateway[] }>(`/storefront/checkout/payment-gateways${q}`)
       .then((d) => {
         const g = d.gateways || [];
         setGateways(g);
         if (g[0]?.name) setPaymentMethod(g[0].name);
       })
       .catch(() => {});
-  }, []);
+  }, [branchIdForApi]);
 
   const cartPayload = useMemo(
     () =>
@@ -128,6 +160,7 @@ export default function CheckoutPage() {
         city: city || countyValue,
         address: address1,
         items: cartPayload,
+        ...(branchIdForApi != null ? { branch_id: branchIdForApi } : {}),
       });
       const methods = res.methods || [];
       setShipMethods(methods);
@@ -139,7 +172,7 @@ export default function CheckoutPage() {
     } finally {
       setCalcBusy(false);
     }
-  }, [county, city, address1, cartPayload]);
+  }, [county, city, address1, cartPayload, branchIdForApi]);
 
   // Re-calculate shipping automatically when county changes (if cart is ready)
   useEffect(() => {
@@ -200,6 +233,7 @@ export default function CheckoutPage() {
           shipping_method_id,
           payment_method: paymentMethod,
           coupon_code: coupon.trim() || undefined,
+          ...(branchIdForApi != null ? { branch_id: branchIdForApi } : {}),
         }
       );
 
