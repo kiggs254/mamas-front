@@ -5,8 +5,6 @@ import Link from "next/link";
 import type { StorefrontCategory } from "@/types/api";
 import { MenuIcon, UserIcon, HeartIcon, PackageIcon, PhoneIcon, LocationIcon } from "./Icons";
 import { headerLocationLabel, readSelectedBranch } from "@/lib/branch-selection";
-import { useBranchCartConflictState } from "./BranchCartConflictContext";
-import BranchCartWarning from "./BranchCartWarning";
 import styles from "./MobileMenu.module.css";
 
 type Props = {
@@ -18,7 +16,6 @@ type Props = {
 
 function MobileMenuStorePicker({ onPick }: { onPick: () => void }) {
   const [label, setLabel] = useState(() => headerLocationLabel(readSelectedBranch()));
-  const branchCart = useBranchCartConflictState();
 
   useEffect(() => {
     const sync = () => setLabel(headerLocationLabel(readSelectedBranch()));
@@ -27,21 +24,10 @@ function MobileMenuStorePicker({ onPick }: { onPick: () => void }) {
   }, []);
 
   return (
-    <div className={styles.storePickerBlock}>
-      <button type="button" className={styles.storePickerBtn} onClick={onPick}>
-        <LocationIcon size={20} color="var(--color-primary)" />
-        <span className={styles.storePickerLabel}>{label}</span>
-      </button>
-      {branchCart?.branchesEnabledShop ? (
-        <BranchCartWarning
-          className={styles.storePickerWarning}
-          conflictIds={branchCart.conflictIds}
-          checking={branchCart.checking}
-          onProceed={branchCart.proceedRemove}
-          onDismiss={branchCart.dismiss}
-        />
-      ) : null}
-    </div>
+    <button type="button" className={styles.storePickerBtn} onClick={onPick}>
+      <LocationIcon size={20} color="var(--color-primary)" />
+      <span className={styles.storePickerLabel}>{label}</span>
+    </button>
   );
 }
 

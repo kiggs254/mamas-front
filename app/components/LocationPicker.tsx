@@ -26,6 +26,11 @@ export default function LocationPicker() {
   const [stores, setStores] = useState<StoreLocatorBranch[] | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  const closePicker = () => {
+    setIsOpen(false);
+    window.dispatchEvent(new Event("locationPickerClose"));
+  };
+
   useEffect(() => {
     let cancelled = false;
     const openModal = () => setIsOpen(true);
@@ -60,7 +65,7 @@ export default function LocationPicker() {
 
   const handleSelect = (store: StoreLocatorBranch) => {
     writeSelectedBranch({ id: store.id, name: store.name, city: store.city });
-    setIsOpen(false);
+    closePicker();
     window.dispatchEvent(new Event("locationChange"));
     router.refresh();
   };
@@ -79,7 +84,7 @@ export default function LocationPicker() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="location-picker-title"
-      onClick={() => setIsOpen(false)}
+      onClick={closePicker}
     >
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
