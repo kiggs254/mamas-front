@@ -70,7 +70,7 @@
   align-items: center;
   flex-shrink: 0;
   align-self: center;
-  min-width: 200px;
+  min-width: 0;
 }
 
 .logoImage {
@@ -302,6 +302,13 @@ a.headerAction {
   flex-shrink: 0;
 }
 
+/* Hamburger is hidden on desktop; the wrapper still took flex space and pushed the logo right */
+@media (min-width: 769px) {
+  .mobileNavWrap {
+    display: none;
+  }
+}
+
 .mobileLocationWrap {
   display: none;
 }
@@ -339,7 +346,7 @@ a.headerAction {
   .logo {
     grid-column: 2;
     grid-row: 1;
-    justify-self: center;
+    justify-self: start;
     max-width: 100%;
     min-width: 0;
   }
