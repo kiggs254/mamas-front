@@ -8,7 +8,8 @@ import styles from "./Checkout.module.css";
 import { ShieldIcon, ArrowRightIcon } from "../components/Icons";
 import { useCart } from "@/hooks/useCart";
 import { apiGet, apiPost } from "@/lib/api";
-import { readSelectedBranch } from "@/lib/branch-selection";
+import { readSelectedBranch, parseNumericBranchId } from "@/lib/branch-selection";
+import AddressAutocomplete, { type PlaceResolved } from "../components/AddressAutocomplete";
 import { productPrimaryImage } from "@/lib/products";
 import type { CartLine, StorefrontProduct, ProductVariant } from "@/types/api";
 
@@ -24,12 +25,6 @@ const KENYA_COUNTIES = [
 
 type ShipMethod = { id: number | string; name: string; cost?: string | number; type?: string };
 type Gateway = { id: number; name: string; config?: Record<string, unknown> };
-
-function parseNumericBranchId(id: string | undefined): number | undefined {
-  if (!id || !/^\d+$/.test(String(id).trim())) return undefined;
-  const n = Number(id);
-  return Number.isFinite(n) && n > 0 ? n : undefined;
-}
 
 function lineUnitPrice(line: CartLine): number {
   const v = line.variant as ProductVariant | null | undefined;
@@ -78,6 +73,12 @@ export default function CheckoutPage() {
 
   const [checkoutBranchId, setCheckoutBranchId] = useState<number | undefined>(undefined);
   const [branchesEnabledShop, setBranchesEnabledShop] = useState(false);
+  const [deliveryLat, setDeliveryLat] = useState<number | null>(null);
+  const [deliveryLng, setDeliveryLng] = useState<number | null>(null);
+  const [distanceCheckoutConfig, setDistanceCheckoutConfig] = useState<{
+    enabled: boolean;
+    google_maps_api_key: string;
+  } | null>(null);
 
   useEffect(() => {
     const syncBranch = () => {
@@ -99,6 +100,23 @@ export default function CheckoutPage() {
   }, []);
 
   const branchIdForApi = branchesEnabledShop && checkoutBranchId != null ? checkoutBranchId : undefined;
+
+  useEffect(() => {
+    if (!branchesEnabledShop || branchIdForApi == null) {
+      setDistanceCheckoutConfig(null);
+      return;
+    }
+    apiGet<{ config: { enabled: boolean; google_maps_api_key: string } }>(
+      `/storefront/checkout/distance-based-shipping-config?branch_id=${branchIdForApi}`
+    )
+      .then((d) => setDistanceCheckoutConfig(d.config ?? null))
+      .catch(() => setDistanceCheckoutConfig(null));
+  }, [branchesEnabledShop, branchIdForApi]);
+
+  const placesAutocompleteEnabled = Boolean(
+    distanceCheckoutConfig?.enabled && distanceCheckoutConfig.google_maps_api_key?.trim()
+  );
+  const mapsApiKey = distanceCheckoutConfig?.google_maps_api_key?.trim() ?? "";
 
   useEffect(() => {
     const q = branchIdForApi != null ? `?branch_id=${branchIdForApi}` : "";
@@ -148,19 +166,29 @@ export default function CheckoutPage() {
   const discount = discountPreview ?? 0;
   const total = Math.max(0, subtotal + shipCost - discount);
 
-  const refreshShipping = useCallback(async (countyOverride?: string) => {
-    const countyValue = countyOverride ?? county;
+  const onDeliveryPlaceResolved = useCallback((p: PlaceResolved) => {
+    setAddress1(p.address1);
+    if (p.city) setCity(p.city);
+    setCounty(p.county);
+    setDeliveryLat(p.lat);
+    setDeliveryLng(p.lng);
+  }, []);
+
+  const refreshShipping = useCallback(async () => {
     if (cartPayload.length === 0) return;
     setCalcBusy(true);
     setError("");
     try {
+      const latOk = deliveryLat != null && Number.isFinite(deliveryLat);
+      const lngOk = deliveryLng != null && Number.isFinite(deliveryLng);
       const res = await apiPost<{ methods: ShipMethod[] }>("/storefront/checkout/calculate-shipping", {
         country: "Kenya",
-        state: countyValue,
-        city: city || countyValue,
+        state: county,
+        city: city || county,
         address: address1,
         items: cartPayload,
         ...(branchIdForApi != null ? { branch_id: branchIdForApi } : {}),
+        ...(latOk && lngOk ? { latitude: deliveryLat, longitude: deliveryLng } : {}),
       });
       const methods = res.methods || [];
       setShipMethods(methods);
@@ -172,14 +200,15 @@ export default function CheckoutPage() {
     } finally {
       setCalcBusy(false);
     }
-  }, [county, city, address1, cartPayload, branchIdForApi]);
+  }, [county, city, address1, cartPayload, branchIdForApi, deliveryLat, deliveryLng]);
 
-  // Re-calculate shipping automatically when county changes (if cart is ready)
   useEffect(() => {
     if (cartPayload.length === 0) return;
-    refreshShipping(county);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [county]);
+    const t = window.setTimeout(() => {
+      refreshShipping();
+    }, 420);
+    return () => window.clearTimeout(t);
+  }, [county, city, address1, branchIdForApi, deliveryLat, deliveryLng, cartPayload.length, refreshShipping]);
 
   const validateCoupon = async () => {
     setCouponError("");
@@ -211,9 +240,22 @@ export default function CheckoutPage() {
       return;
     }
 
+    const shipping_method_id = /^\d+$/.test(selectedShipKey) ? Number(selectedShipKey) : selectedShipKey;
+    if (
+      String(shipping_method_id) === "distance-based-shipping" &&
+      (deliveryLat == null ||
+        deliveryLng == null ||
+        !Number.isFinite(deliveryLat) ||
+        !Number.isFinite(deliveryLng))
+    ) {
+      setError("Choose your street address from the suggestions so we can calculate distance-based delivery.");
+      return;
+    }
+
     setBusy(true);
     try {
-      const shipping_method_id = /^\d+$/.test(selectedShipKey) ? Number(selectedShipKey) : selectedShipKey;
+      const latOk = deliveryLat != null && Number.isFinite(deliveryLat);
+      const lngOk = deliveryLng != null && Number.isFinite(deliveryLng);
 
       const orderRes = await apiPost<{ order: { id: number; order_number?: string } }>(
         "/storefront/checkout/create-order",
@@ -227,6 +269,7 @@ export default function CheckoutPage() {
             city: city || county,
             state: county,
             country: "Kenya",
+            ...(latOk && lngOk ? { latitude: deliveryLat, longitude: deliveryLng } : {}),
           },
           billing_address: { same_as_shipping: true },
           items: cartPayload,
@@ -323,42 +366,10 @@ export default function CheckoutPage() {
               <div className={styles.formsPanel}>
                 {error && <div className={styles.errorBanner}>{error}</div>}
 
-                {/* Step 1: Contact */}
+                {/* Step 1: Delivery */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>
-                    <span className={styles.stepNumber}>1</span> Contact Information
-                  </h2>
-                  <div className={styles.formGrid}>
-                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
-                      <label>Email Address *</label>
-                      <input
-                        type="email"
-                        className={styles.input}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>First Name</label>
-                      <input className={styles.input} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>Last Name</label>
-                      <input className={styles.input} value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
-                    </div>
-                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
-                      <label>Phone Number</label>
-                      <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+254 700 000 000" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 2: Shipping */}
-                <div className={styles.section}>
-                  <h2 className={styles.sectionTitle}>
-                    <span className={styles.stepNumber}>2</span> Delivery Address
+                    <span className={styles.stepNumber}>1</span> Delivery Address
                   </h2>
                   <div className={styles.kenyaBadge}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -367,7 +378,20 @@ export default function CheckoutPage() {
                   <div className={styles.formGrid}>
                     <div className={`${styles.inputGroup} ${styles.spanFull}`}>
                       <label>Street Address *</label>
-                      <input className={styles.input} value={address1} onChange={(e) => setAddress1(e.target.value)} placeholder="e.g. 123 Uhuru Highway" />
+                      <AddressAutocomplete
+                        apiKey={mapsApiKey}
+                        enabled={placesAutocompleteEnabled}
+                        value={address1}
+                        onChange={(v) => {
+                          setAddress1(v);
+                          setDeliveryLat(null);
+                          setDeliveryLng(null);
+                        }}
+                        onPlaceResolved={onDeliveryPlaceResolved}
+                        countyOptions={KENYA_COUNTIES}
+                        className={styles.input}
+                        placeholder={placesAutocompleteEnabled ? "Start typing; pick an address from suggestions" : "e.g. 123 Uhuru Highway"}
+                      />
                     </div>
                     <div className={`${styles.inputGroup} ${styles.spanFull}`}>
                       <label>Apartment / Building (optional)</label>
@@ -433,6 +457,38 @@ export default function CheckoutPage() {
                         </button>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Step 2: Contact */}
+                <div className={styles.section}>
+                  <h2 className={styles.sectionTitle}>
+                    <span className={styles.stepNumber}>2</span> Contact Information
+                  </h2>
+                  <div className={styles.formGrid}>
+                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
+                      <label>Email Address *</label>
+                      <input
+                        type="email"
+                        className={styles.input}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                    <div className={styles.inputGroup}>
+                      <label>First Name</label>
+                      <input className={styles.input} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" />
+                    </div>
+                    <div className={styles.inputGroup}>
+                      <label>Last Name</label>
+                      <input className={styles.input} value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
+                    </div>
+                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
+                      <label>Phone Number</label>
+                      <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+254 700 000 000" />
+                    </div>
                   </div>
                 </div>
 

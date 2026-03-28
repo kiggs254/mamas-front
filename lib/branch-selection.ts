@@ -60,3 +60,10 @@ export function headerLocationLabel(b: SelectedBranch | null): string {
   if (!b) return "Select Location";
   return b.name;
 }
+
+/** Numeric branch id for API calls, or undefined when missing or non-numeric. */
+export function parseNumericBranchId(id: string | undefined): number | undefined {
+  if (!id || !/^\d+$/.test(String(id).trim())) return undefined;
+  const n = Number(id);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}

@@ -1,0 +1,47 @@
+.wrap {
+  margin-top: 8px;
+  max-width: 280px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text, #333);
+}
+
+.checking {
+  color: var(--color-text-light, #666);
+  font-size: 11px;
+}
+
+.text {
+  margin: 0 0 8px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.proceed {
+  background: var(--color-primary, #0d6efd);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.proceed:hover {
+  filter: brightness(1.05);
+}
+
+.dismiss {
+  background: transparent;
+  border: none;
+  color: var(--color-text-light, #666);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import LocationPicker from "./LocationPicker";
 import CartSidebar from "./CartSidebar";
 import AbandonedCartRestore from "./AbandonedCartRestore";
+import { BranchCartConflictProvider } from "./BranchCartConflictContext";
 
 export default function LayoutWrapper({
   children,
@@ -30,7 +31,7 @@ export default function LayoutWrapper({
   }
 
   return (
-    <>
+    <BranchCartConflictProvider>
       <Suspense fallback={null}>
         <AbandonedCartRestore />
       </Suspense>
@@ -39,6 +40,6 @@ export default function LayoutWrapper({
       {header}
       <main>{children}</main>
       {footer}
-    </>
+    </BranchCartConflictProvider>
   );
 }
