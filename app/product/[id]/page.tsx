@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { serverApiGet } from "@/lib/server-api";
 import { getCustomer } from "@/lib/auth";
 import type { Review, StorefrontCategory, StorefrontProduct } from "@/types/api";
-import { flattenCategoryTree } from "@/lib/categories";
+import { normalizeStorefrontCategoryTree } from "@/lib/categories";
 import ProductDetailView from "./ProductDetailView";
 import PopularProducts from "../../components/PopularProducts";
 
@@ -17,9 +17,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!data?.product) notFound();
 
   const product = data.product;
-  const flatCats = (catData?.categories || [])
-    .filter((c) => c.parent_id == null)
-    .slice(0, 8);
+  const flatCats = normalizeStorefrontCategoryTree(catData?.categories || []).slice(0, 8);
 
   const [reviewsData, customer] = await Promise.all([
     serverApiGet<{ reviews: Review[] }>(`/storefront/reviews?product_id=${product.id}&limit=50`),

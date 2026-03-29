@@ -5,6 +5,9 @@ import { useCallback, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import type { ShopQueryState } from "@/lib/shop-query";
 import { shopPathFromState } from "@/lib/shop-query";
+import { categoryAncestorIdsForSlug, normalizeStorefrontCategoryTree } from "@/lib/categories";
+import type { StorefrontCategory } from "@/types/api";
+import { ChevronDownIcon } from "./Icons";
 import styles from "./FilterPanel.module.css";
 
 export type FilterCategoryNode = {
@@ -26,6 +29,23 @@ export default function FilterPanel({ categories, state, priceHintMin, priceHint
   const router = useRouter();
   const [minPrice, setMinPrice] = useState(state.min_price || "");
   const [maxPrice, setMaxPrice] = useState(state.max_price || "");
+  const tree = useMemo(
+    () => normalizeStorefrontCategoryTree(categories as StorefrontCategory[]),
+    [categories],
+  );
+
+  const [expanded, setExpanded] = useState<Set<number>>(() =>
+    categoryAncestorIdsForSlug(tree, state.category_slug),
+  );
+
+  useEffect(() => {
+    const need = categoryAncestorIdsForSlug(tree, state.category_slug);
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      need.forEach((id) => next.add(id));
+      return next;
+    });
+  }, [state.category_slug, tree]);
 
   const selectedCategoryPath = useMemo(() => {
     const ids = new Set<number>();
@@ -46,9 +66,9 @@ export default function FilterPanel({ categories, state, priceHintMin, priceHint
       return false;
     };
 
-    walk(categories);
+    walk(tree);
     return ids;
-  }, [categories, state.category_slug]);
+  }, [tree, state.category_slug]);
 
   useEffect(() => {
     setMinPrice(state.min_price || "");
@@ -121,28 +141,55 @@ export default function FilterPanel({ categories, state, priceHintMin, priceHint
         const checked = Boolean(slug && state.category_slug === slug);
         const inSelectedPath = selectedCategoryPath.has(cat.id);
         const hasChildren = Boolean(cat.children?.length);
+        const isExpanded = expanded.has(cat.id);
+        const showSub = hasChildren && isExpanded;
 
         return (
           <li key={cat.id} className={styles.catItem}>
-            <label
-              className={[
-                styles.catRow,
-                checked ? styles.catRowActive : "",
-                !checked && inSelectedPath ? styles.catRowAncestor : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              style={{ paddingLeft: `${depth * 18 + 4}px` }}
-            >
-              <input
-                type="checkbox"
-                checked={checked}
-                disabled={!slug}
-                onChange={(e) => onCategoryToggle(slug, e.target.checked)}
-              />
-              <span className={styles.catName}>{cat.name}</span>
-            </label>
-            {hasChildren ? <div className={styles.catChildren}>{renderCategories(cat.children || [], depth + 1)}</div> : null}
+            <div className={styles.catRowLine} style={{ paddingLeft: `${depth * 18 + 4}px` }}>
+              <label
+                className={[
+                  styles.catRow,
+                  checked ? styles.catRowActive : "",
+                  !checked && inSelectedPath ? styles.catRowAncestor : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={!slug}
+                  onChange={(e) => onCategoryToggle(slug, e.target.checked)}
+                />
+                <span className={styles.catName}>{cat.name}</span>
+              </label>
+              {hasChildren ? (
+                <button
+                  type="button"
+                  className={styles.catExpandBtn}
+                  aria-expanded={isExpanded}
+                  aria-label={
+                    isExpanded ? `Collapse subcategories under ${cat.name}` : `Expand subcategories under ${cat.name}`
+                  }
+                  onClick={() =>
+                    setExpanded((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(cat.id)) next.delete(cat.id);
+                      else next.add(cat.id);
+                      return next;
+                    })
+                  }
+                >
+                  <span className={`${styles.catExpandChevron} ${isExpanded ? styles.catExpandChevronOpen : ""}`}>
+                    <ChevronDownIcon size={16} color="var(--color-text-light)" />
+                  </span>
+                </button>
+              ) : null}
+            </div>
+            {showSub ? (
+              <div className={styles.catChildren}>{renderCategories(cat.children || [], depth + 1)}</div>
+            ) : null}
           </li>
         );
       })}
@@ -188,7 +235,7 @@ export default function FilterPanel({ categories, state, priceHintMin, priceHint
 
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Product categories</h3>
-        {renderCategories(categories)}
+        {renderCategories(tree)}
       </section>
 
       <section className={styles.section}>

@@ -16,6 +16,7 @@ import HeaderCart from "./HeaderCart";
 import HeaderSearch from "./HeaderSearch";
 import BrowseCategoriesDropdown from "./BrowseCategoriesDropdown";
 import MobileMenu from "./MobileMenu";
+import { normalizeStorefrontCategoryTree, flattenCategoryTree } from "@/lib/categories";
 
 export default async function Header() {
   const [customer, catData, settingsData] = await Promise.all([
@@ -24,7 +25,8 @@ export default async function Header() {
     serverApiGet<{ settings: ShopSettings }>("/storefront/settings"),
   ]);
 
-  const categories = catData?.categories || [];
+  const categoryTree = normalizeStorefrontCategoryTree(catData?.categories || []);
+  const categoriesFlat = flattenCategoryTree(categoryTree);
   const phone = settingsData?.settings?.shop_phone || "0117 262 933";
 
   const firstName = customer
@@ -79,13 +81,13 @@ export default async function Header() {
               phone={phone}
               signedIn={!!customer}
               accountLabel={firstName || "Account"}
-              categories={categories}
+              categories={categoryTree}
             />
           </div>
           <Link href="/" className={styles.logo}>
             <img src="/images/logo.png" alt="Cleanshelf Supermarket" className={styles.logoImage} />
           </Link>
-          <HeaderSearch categories={categories} className={styles.headerSearchSlot} />
+          <HeaderSearch categories={categoriesFlat} className={styles.headerSearchSlot} />
           <div className={styles.headerActions}>
             <div className={`${styles.headerAction} ${styles.compareDesktopOnly}`}>
               <span className={styles.icon}>
@@ -121,7 +123,7 @@ export default async function Header() {
 
       <div className={styles.bottomBar}>
         <div className={styles.bottomBarInner}>
-          <BrowseCategoriesDropdown categories={categories} />
+          <BrowseCategoriesDropdown categories={categoryTree} />
           <nav className={styles.navLinks}>
             <Link href="/shop?on_sale=true" className={styles.navLink} prefetch={false}>
               Deals <span className={styles.hot}>Hot</span>

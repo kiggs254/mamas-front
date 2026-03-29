@@ -78,16 +78,56 @@
   display: block;
 }
 
+.catRowLine {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 4px;
+}
+
 .catRow {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
   padding: 8px 4px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 13px;
   color: var(--color-text);
   font-family: var(--font-secondary);
+}
+
+.catExpandBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-light);
+  transition: background 0.15s ease;
+}
+
+.catExpandBtn:hover,
+.catExpandBtn:focus-visible {
+  background: var(--color-bg-light);
+  outline: none;
+}
+
+.catExpandChevron {
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+
+.catExpandChevronOpen {
+  transform: rotate(180deg);
 }
 
 .catRow:hover {

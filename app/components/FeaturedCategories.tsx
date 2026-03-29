@@ -4,6 +4,7 @@ import { serverApiGet } from "@/lib/server-api";
 import type { StorefrontCategory } from "@/types/api";
 import { resolveMediaUrl } from "@/lib/api-config";
 import FeaturedCategoriesCarousel from "./FeaturedCategoriesCarousel";
+import { normalizeStorefrontCategoryTree } from "@/lib/categories";
 import styles from "./FeaturedCategories.module.css";
 
 const palette = ["#F2FCE4", "#FFFCEB", "#ECFFEC", "#FEEFEA", "#FFF3EB", "#FFF3FF"];
@@ -16,7 +17,7 @@ function colorFor(name: string) {
 
 export default async function FeaturedCategories() {
   const data = await serverApiGet<{ categories: StorefrontCategory[] }>("/storefront/categories");
-  const roots = (data?.categories || []).filter((c) => c.parent_id == null);
+  const roots = normalizeStorefrontCategoryTree(data?.categories || []);
 
   if (roots.length === 0) return null;
 

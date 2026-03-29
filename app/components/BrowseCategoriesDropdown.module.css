@@ -46,17 +46,128 @@
   padding: 0;
 }
 
+.branchRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding-right: 8px;
+}
+
+.subBranchRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 4px 8px 4px 0;
+}
+
+.branch {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.branch:last-child {
+  border-bottom: none;
+}
+
+.subBranch {
+  margin: 0;
+}
+
+.expandBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-light);
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+
+.expandBtn:hover,
+.expandBtn:focus-visible {
+  background: var(--color-bg);
+  outline: none;
+}
+
+.expandChevron {
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+
+.expandChevronOpen {
+  transform: rotate(180deg);
+}
+
+.subList {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 8px 0;
+  background: color-mix(in srgb, var(--color-bg) 85%, #fff);
+  border-top: 1px solid var(--color-border);
+}
+
+.nestedSubList {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 4px 12px;
+}
+
+.subLink {
+  display: block;
+  flex: 1;
+  padding: 8px 12px 8px 20px;
+  text-decoration: none;
+  color: var(--color-heading);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-primary);
+  transition: background 0.15s ease, color 0.15s ease;
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+
+.subBranchRow .subLink {
+  padding-left: 12px;
+}
+
+.subLinkText {
+  flex: 1;
+  min-width: 0;
+}
+
+.subLink:hover,
+.subLink:focus-visible {
+  background: var(--color-bg);
+  color: var(--color-primary);
+  outline: none;
+}
+
 .link {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0 10px 16px;
   text-decoration: none;
   color: var(--color-heading);
   font-size: 14px;
   font-weight: 600;
   font-family: var(--font-primary);
   transition: background 0.15s ease, color 0.15s ease;
+}
+
+.branchRow .link {
+  border-radius: var(--radius-sm);
+}
+
+.linkStandalone {
+  padding: 10px 16px;
 }
 
 .link:hover,

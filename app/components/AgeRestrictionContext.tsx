@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 const SESSION_KEY = "cleanshelf_age_verified_18";
 
@@ -74,46 +75,48 @@ export function AgeRestrictionProvider({ children }: { children: ReactNode }) {
     confirmAgeRestrictedAdd,
   }), [confirmAgeRestrictedAdd]);
 
+  const modal = pending ? (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="age-restriction-title"
+      className="fixed inset-0 z-[11000] flex items-center justify-center bg-black/55 px-4"
+    >
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Age restricted</p>
+        <h2 id="age-restriction-title" className="text-xl font-semibold text-slate-900">
+          Confirm that you are 18+
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          {pending.productName
+            ? `"${pending.productName}" is restricted to customers aged 18 and above.`
+            : "This product is restricted to customers aged 18 and above."}{" "}
+          Please confirm your age to continue.
+        </p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={accept}
+            className="flex-1 rounded-xl bg-[#7A8E3A] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#687a31]"
+          >
+            I am 18 or older
+          </button>
+          <button
+            type="button"
+            onClick={decline}
+            className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <AgeRestrictionContext.Provider value={value}>
       {children}
-      {pending ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="age-restriction-title"
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 px-4"
-        >
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Age restricted</p>
-            <h2 id="age-restriction-title" className="text-xl font-semibold text-slate-900">
-              Confirm that you are 18+
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              {pending.productName
-                ? `"${pending.productName}" is restricted to customers aged 18 and above.`
-                : "This product is restricted to customers aged 18 and above."}{" "}
-              Please confirm your age to continue.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={accept}
-                className="flex-1 rounded-xl bg-[#7A8E3A] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#687a31]"
-              >
-                I am 18 or older
-              </button>
-              <button
-                type="button"
-                onClick={decline}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {modal && typeof document !== "undefined" ? createPortal(modal, document.body) : null}
     </AgeRestrictionContext.Provider>
   );
 }

@@ -22,6 +22,7 @@ import {
   type ShopQueryState,
 } from "@/lib/shop-query";
 import { getStorefrontBranchIdCookie } from "@/lib/branch-cookie-server";
+import { normalizeStorefrontCategoryTree } from "@/lib/categories";
 
 function slugToTitle(slug: string): string {
   return slug
@@ -104,7 +105,7 @@ export default async function ShopPage({
   const priceHintMin = cheapP ? productEffectivePrice(cheapP).price : undefined;
   const priceHintMax = priceyP ? productEffectivePrice(priceyP).price : undefined;
 
-  const categoryTree = catData?.categories || [];
+  const categoryTree = normalizeStorefrontCategoryTree(catData?.categories || []);
   const selectedCategory = findCategoryBySlug(categoryTree, categorySlug);
 
   const wlData =

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import type { StorefrontCategory } from "@/types/api";
-import { MenuIcon, UserIcon, HeartIcon, PackageIcon, PhoneIcon, LocationIcon } from "./Icons";
+import { MenuIcon, UserIcon, HeartIcon, PackageIcon, PhoneIcon, LocationIcon, ChevronDownIcon } from "./Icons";
 import { headerLocationLabel, readSelectedBranch } from "@/lib/branch-selection";
 import styles from "./MobileMenu.module.css";
 
@@ -13,6 +13,84 @@ type Props = {
   accountLabel: string;
   categories: StorefrontCategory[];
 };
+
+function MobileCategoryBranch({
+  cat,
+  depth,
+  expanded,
+  toggle,
+  close,
+}: {
+  cat: StorefrontCategory;
+  depth: number;
+  expanded: Set<number>;
+  toggle: (id: number) => void;
+  close: () => void;
+}) {
+  const href = cat.slug ? `/shop?category_slug=${encodeURIComponent(cat.slug)}` : "/shop";
+  const children = Array.isArray(cat.children) ? cat.children : [];
+  const hasChildren = children.length > 0;
+  const isOpen = expanded.has(cat.id);
+  const padLeft = depth > 0 ? 10 + depth * 12 : 6;
+
+  if (!hasChildren) {
+    return (
+      <Link
+        href={href}
+        className={depth > 0 ? styles.categorySubLink : styles.categoryLink}
+        style={{ paddingLeft: padLeft }}
+        prefetch={false}
+        onClick={close}
+      >
+        {cat.name}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={styles.mobileCatBranch}>
+      <div className={styles.mobileCatRow}>
+        <Link
+          href={href}
+          className={depth > 0 ? styles.categorySubLink : styles.categoryLink}
+          style={{ paddingLeft: padLeft }}
+          prefetch={false}
+          onClick={close}
+        >
+          {cat.name}
+        </Link>
+        <button
+          type="button"
+          className={styles.mobileCatExpand}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? `Hide subcategories under ${cat.name}` : `Show subcategories under ${cat.name}`}
+          onClick={(e) => {
+            e.preventDefault();
+            toggle(cat.id);
+          }}
+        >
+          <span className={`${styles.mobileCatChevron} ${isOpen ? styles.mobileCatChevronOpen : ""}`}>
+            <ChevronDownIcon size={18} color="var(--color-text-light)" />
+          </span>
+        </button>
+      </div>
+      {isOpen ? (
+        <div className={styles.mobileCatChildren}>
+          {children.map((ch) => (
+            <MobileCategoryBranch
+              key={ch.id}
+              cat={ch}
+              depth={depth + 1}
+              expanded={expanded}
+              toggle={toggle}
+              close={close}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function MobileMenuStorePicker({ onPick }: { onPick: () => void }) {
   const [label, setLabel] = useState(() => headerLocationLabel(readSelectedBranch()));
@@ -33,8 +111,18 @@ function MobileMenuStorePicker({ onPick }: { onPick: () => void }) {
 
 export default function MobileMenu({ phone, signedIn, accountLabel, categories }: Props) {
   const [open, setOpen] = useState(false);
+  const [catExpanded, setCatExpanded] = useState<Set<number>>(() => new Set());
 
   const close = useCallback(() => setOpen(false), []);
+
+  const toggleCatExpand = useCallback((id: number) => {
+    setCatExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -53,8 +141,6 @@ export default function MobileMenu({ phone, signedIn, accountLabel, categories }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, close]);
-
-  const roots = categories.filter((c) => (c.parent_id ?? null) === null);
 
   return (
     <div className={styles.menuHost}>
@@ -133,27 +219,21 @@ export default function MobileMenu({ phone, signedIn, accountLabel, categories }
             Stores
           </Link>
 
-          {roots.length > 0 ? (
+          {categories.length > 0 ? (
             <>
               <div className={styles.divider} />
               <p className={styles.sectionLabel}>Categories</p>
               <div className={styles.categoryList}>
-                {roots.map((cat) => {
-                  const href = cat.slug
-                    ? `/shop?category_slug=${encodeURIComponent(cat.slug)}`
-                    : "/shop";
-                  return (
-                    <Link
-                      key={cat.id}
-                      href={href}
-                      className={styles.categoryLink}
-                      prefetch={false}
-                      onClick={close}
-                    >
-                      {cat.name}
-                    </Link>
-                  );
-                })}
+                {categories.map((cat) => (
+                  <MobileCategoryBranch
+                    key={cat.id}
+                    cat={cat}
+                    depth={0}
+                    expanded={catExpanded}
+                    toggle={toggleCatExpand}
+                    close={close}
+                  />
+                ))}
               </div>
             </>
           ) : null}
