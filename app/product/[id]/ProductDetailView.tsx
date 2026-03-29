@@ -20,6 +20,7 @@ import {
   PlusIcon,
   MinusIcon,
   SearchIcon,
+  ChevronDownIcon,
 } from "../../components/Icons";
 import WishlistButton from "../../components/WishlistButton";
 import { apiPost } from "@/lib/api";
@@ -34,6 +35,45 @@ function colorFor(name: string) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
   return catPalette[h % catPalette.length];
+}
+
+function categorySlugsForProduct(product: StorefrontProduct): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  if (product.category?.slug) {
+    seen.add(product.category.slug);
+    out.push(product.category.slug);
+  }
+  for (const c of product.categories || []) {
+    const s = c?.slug;
+    if (s && !seen.has(s)) {
+      seen.add(s);
+      out.push(s);
+    }
+  }
+  return out;
+}
+
+/** Expand every ancestor of a category whose slug matches the product (so sub-trees open to current product). */
+function ancestorIdsForSlugs(roots: StorefrontCategory[], slugs: string[]): Set<number> {
+  const want = new Set(slugs.filter(Boolean));
+  const expanded = new Set<number>();
+  if (want.size === 0) return expanded;
+
+  const walk = (nodes: StorefrontCategory[]): boolean => {
+    for (const n of nodes) {
+      if (n.slug && want.has(n.slug)) return true;
+      const ch = n.children || [];
+      if (ch.length && walk(ch)) {
+        expanded.add(n.id);
+        return true;
+      }
+    }
+    return false;
+  };
+
+  walk(roots);
+  return expanded;
 }
 
 type Props = {
@@ -114,6 +154,111 @@ export default function ProductDetailView({
   const { price, oldPrice } = variantPrices;
   const onSale = oldPrice != null && oldPrice > price;
   const rating = productRatingApprox(product);
+
+  const productCategorySlugKey = useMemo(
+    () => categorySlugsForProduct(product).sort().join("|"),
+    [product],
+  );
+
+  const [catExpanded, setCatExpanded] = useState<Set<number>>(() =>
+    ancestorIdsForSlugs(sidebarCategories, categorySlugsForProduct(product)),
+  );
+
+  useEffect(() => {
+    const next = ancestorIdsForSlugs(sidebarCategories, categorySlugsForProduct(product));
+    setCatExpanded((prev) => {
+      const merged = new Set(prev);
+      next.forEach((id) => merged.add(id));
+      return merged;
+    });
+  }, [product.id, productCategorySlugKey, sidebarCategories]);
+
+  const toggleCategoryExpand = useCallback((id: number) => {
+    setCatExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const renderCategoryBranch = (cat: StorefrontCategory, depth: number) => {
+    const href = cat.slug ? `/shop?category_slug=${encodeURIComponent(cat.slug)}` : "/shop";
+    const children = cat.children || [];
+    const hasChildren = children.length > 0;
+    const isOpen = catExpanded.has(cat.id);
+    const iconSize = depth === 0 ? 24 : 20;
+
+    const iconCell = (
+      <span
+        className={depth === 0 ? styles.catIcon : styles.catIconSm}
+        style={{ background: colorFor(cat.name) }}
+      >
+        {cat.image ? (
+          <Image
+            src={resolveMediaUrl(cat.image)}
+            alt=""
+            width={iconSize}
+            height={iconSize}
+            style={{ objectFit: "contain", width: iconSize, height: iconSize }}
+          />
+        ) : (
+          cat.name.trim().charAt(0).toUpperCase()
+        )}
+      </span>
+    );
+
+    if (!hasChildren) {
+      return (
+        <li key={cat.id} className={styles.catItem}>
+          <Link
+            href={href}
+            className={depth === 0 ? styles.catLink : styles.catSubLink}
+            prefetch={false}
+          >
+            {iconCell}
+            <span className={styles.catName}>{cat.name}</span>
+            <span className={styles.catChevron} aria-hidden>
+              ›
+            </span>
+          </Link>
+        </li>
+      );
+    }
+
+    return (
+      <li key={cat.id} className={styles.catItem}>
+        <div className={styles.catBranchRow}>
+          <Link
+            href={href}
+            className={depth === 0 ? styles.catLink : styles.catSubLink}
+            prefetch={false}
+          >
+            {iconCell}
+            <span className={styles.catName}>{cat.name}</span>
+          </Link>
+          <button
+            type="button"
+            className={styles.catExpandBtn}
+            aria-expanded={isOpen}
+            aria-label={
+              isOpen ? `Hide subcategories under ${cat.name}` : `Show subcategories under ${cat.name}`
+            }
+            onClick={() => toggleCategoryExpand(cat.id)}
+          >
+            <span className={`${styles.catExpandChevron} ${isOpen ? styles.catExpandChevronOpen : ""}`}>
+              <ChevronDownIcon size={16} color="var(--color-text-light, #888)" />
+            </span>
+          </button>
+        </div>
+        {isOpen ? (
+          <ul className={styles.catSubList} role="list">
+            {children.map((ch) => renderCategoryBranch(ch, depth + 1))}
+          </ul>
+        ) : null}
+      </li>
+    );
+  };
 
   useEffect(() => {
     if (!onSale) {
@@ -353,40 +498,16 @@ export default function ProductDetailView({
         </div>
 
         <aside className={styles.categoryAside} aria-label="Product categories">
-          <h2 className={styles.asideTitle}>Category</h2>
-          <ul className={styles.catList}>
-            {sidebarCategories.length === 0 ? (
-              <li className={styles.catEmpty}>No categories</li>
-            ) : (
-              sidebarCategories.map((cat) => (
-                <li key={cat.id} className={styles.catItem}>
-                  <Link
-                    href={cat.slug ? `/shop?category_slug=${encodeURIComponent(cat.slug)}` : "/shop"}
-                    className={styles.catLink}
-                    prefetch={false}
-                  >
-                    <span className={styles.catIcon} style={{ background: colorFor(cat.name) }}>
-                      {cat.image ? (
-                        <Image
-                          src={resolveMediaUrl(cat.image)}
-                          alt=""
-                          width={24}
-                          height={24}
-                          style={{ objectFit: "contain", width: 24, height: 24 }}
-                        />
-                      ) : (
-                        cat.name.trim().charAt(0).toUpperCase()
-                      )}
-                    </span>
-                    <span className={styles.catName}>{cat.name}</span>
-                    <span className={styles.catChevron} aria-hidden>
-                      ›
-                    </span>
-                  </Link>
-                </li>
-              ))
-            )}
-          </ul>
+          <h2 className={styles.asideTitle}>Categories</h2>
+          <div className={styles.catListScroll}>
+            <ul className={styles.catList}>
+              {sidebarCategories.length === 0 ? (
+                <li className={styles.catEmpty}>No categories</li>
+              ) : (
+                sidebarCategories.map((cat) => renderCategoryBranch(cat, 0))
+              )}
+            </ul>
+          </div>
         </aside>
       </div>
 

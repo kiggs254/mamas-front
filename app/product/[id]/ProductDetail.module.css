@@ -499,6 +499,22 @@
   font-family: var(--font-primary, inherit);
 }
 
+/* ~10 top-level rows visible, then scroll (subcategories expand inside same scroll area) */
+.catListScroll {
+  max-height: 520px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.catListScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.catListScroll::-webkit-scrollbar-thumb {
+  background: var(--color-border, #ececec);
+  border-radius: 4px;
+}
+
 .catList {
   list-style: none;
   margin: 0;
@@ -507,10 +523,71 @@
 
 .catItem {
   margin: 0;
+}
+
+.catItem > .catLink {
   border-bottom: 1px solid #f0f0f0;
 }
 
-.catItem:last-child {
+.catList > .catItem:last-child > .catLink {
+  border-bottom: none;
+}
+
+.catBranchRow {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.catBranchRow .catLink,
+.catBranchRow .catSubLink {
+  flex: 1;
+  min-width: 0;
+}
+
+.catExpandBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-height: 48px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-light, #888);
+  transition: background 0.12s ease;
+}
+
+.catExpandBtn:hover,
+.catExpandBtn:focus-visible {
+  background: #f5faf6;
+  outline: none;
+}
+
+.catExpandChevron {
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+
+.catExpandChevronOpen {
+  transform: rotate(180deg);
+}
+
+.catSubList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fafcfa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.catSubList .catItem {
+  border-bottom: 1px solid #ececec;
+}
+
+.catSubList .catItem:last-child {
   border-bottom: none;
 }
 
@@ -525,7 +602,19 @@
   transition: background 0.12s ease;
 }
 
-.catLink:hover {
+.catSubLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 8px 16px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 12px;
+  transition: background 0.12s ease;
+}
+
+.catLink:hover,
+.catSubLink:hover {
   background: #fafcfa;
 }
 
@@ -537,6 +626,17 @@
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  flex-shrink: 0;
+}
+
+.catIconSm {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
   flex-shrink: 0;
 }
 

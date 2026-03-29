@@ -17,7 +17,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!data?.product) notFound();
 
   const product = data.product;
-  const flatCats = normalizeStorefrontCategoryTree(catData?.categories || []).slice(0, 8);
+  const categoryTree = normalizeStorefrontCategoryTree(catData?.categories || []);
 
   const [reviewsData, customer] = await Promise.all([
     serverApiGet<{ reviews: Review[] }>(`/storefront/reviews?product_id=${product.id}&limit=50`),
@@ -37,7 +37,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         product={product}
         initialReviews={initialReviews}
         wishlistInitially={inWl}
-        sidebarCategories={flatCats}
+        sidebarCategories={categoryTree}
       />
       <PopularProducts />
     </>

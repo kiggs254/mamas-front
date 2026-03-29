@@ -197,7 +197,7 @@ export default function FilterPanel({ categories, state, priceHintMin, priceHint
   );
 
   return (
-    <div>
+    <div className={styles.root}>
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Filter by price</h3>
         <form onSubmit={onApplyPrice}>

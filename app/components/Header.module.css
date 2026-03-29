@@ -74,7 +74,7 @@
 }
 
 .logoImage {
-  height: 48px;
+  height: 38px;
   width: auto;
   object-fit: contain;
   display: block;
@@ -352,8 +352,8 @@ a.headerAction {
   }
 
   .logoImage {
-    height: 36px;
-    max-width: min(200px, 52vw);
+    height: 28px;
+    max-width: min(180px, 48vw);
     display: block;
   }
 
