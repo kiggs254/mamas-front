@@ -6,6 +6,7 @@ import LocationPicker from "./LocationPicker";
 import CartSidebar from "./CartSidebar";
 import AbandonedCartRestore from "./AbandonedCartRestore";
 import { BranchCartConflictProvider } from "./BranchCartConflictContext";
+import { AgeRestrictionProvider } from "./AgeRestrictionContext";
 
 export default function LayoutWrapper({
   children,
@@ -31,15 +32,17 @@ export default function LayoutWrapper({
   }
 
   return (
-    <BranchCartConflictProvider>
-      <Suspense fallback={null}>
-        <AbandonedCartRestore />
-      </Suspense>
-      <LocationPicker />
-      <CartSidebar />
-      {header}
-      <main>{children}</main>
-      {footer}
-    </BranchCartConflictProvider>
+    <AgeRestrictionProvider>
+      <BranchCartConflictProvider>
+        <Suspense fallback={null}>
+          <AbandonedCartRestore />
+        </Suspense>
+        <LocationPicker />
+        <CartSidebar />
+        {header}
+        <main>{children}</main>
+        {footer}
+      </BranchCartConflictProvider>
+    </AgeRestrictionProvider>
   );
 }

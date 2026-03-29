@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiPost } from "@/lib/api";
 import { useCart } from "@/hooks/useCart";
 import { CartIcon } from "./Icons";
+import { useAgeRestrictionGate } from "./AgeRestrictionContext";
 
 type Props = {
   productId: number;
@@ -11,6 +12,8 @@ type Props = {
   className?: string;
   label?: string;
   cartIconSize?: number;
+  ageRestricted?: boolean;
+  productName?: string;
 };
 
 export default function AddToCartButton({
@@ -19,13 +22,20 @@ export default function AddToCartButton({
   className,
   label = "Add",
   cartIconSize = 14,
+  ageRestricted = false,
+  productName,
 }: Props) {
   const { mutate } = useCart();
+  const { confirmAgeRestrictedAdd } = useAgeRestrictionGate();
   const [loading, setLoading] = useState(false);
 
   const handle = async () => {
     setLoading(true);
     try {
+      if (ageRestricted) {
+        const accepted = await confirmAgeRestrictedAdd({ productName });
+        if (!accepted) return;
+      }
       await apiPost("/storefront/cart", {
         product_id: productId,
         quantity: 1,

@@ -1,20 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import type { ShopQueryState } from "@/lib/shop-query";
 import { shopPathFromState } from "@/lib/shop-query";
 import styles from "./FilterPanel.module.css";
 
-export type FilterCategoryRow = {
+export type FilterCategoryNode = {
   id: number;
   name: string;
   slug?: string;
+  children?: FilterCategoryNode[];
 };
 
 type Props = {
-  categories: FilterCategoryRow[];
+  categories: FilterCategoryNode[];
   state: ShopQueryState;
   priceHintMin?: number;
   priceHintMax?: number;
@@ -25,6 +26,29 @@ export default function FilterPanel({ categories, state, priceHintMin, priceHint
   const router = useRouter();
   const [minPrice, setMinPrice] = useState(state.min_price || "");
   const [maxPrice, setMaxPrice] = useState(state.max_price || "");
+
+  const selectedCategoryPath = useMemo(() => {
+    const ids = new Set<number>();
+    const selectedSlug = state.category_slug?.trim();
+    if (!selectedSlug) return ids;
+
+    const walk = (nodes: FilterCategoryNode[]): boolean => {
+      for (const node of nodes) {
+        if (node.slug === selectedSlug) {
+          ids.add(node.id);
+          return true;
+        }
+        if (node.children?.length && walk(node.children)) {
+          ids.add(node.id);
+          return true;
+        }
+      }
+      return false;
+    };
+
+    walk(categories);
+    return ids;
+  }, [categories, state.category_slug]);
 
   useEffect(() => {
     setMinPrice(state.min_price || "");
@@ -90,6 +114,41 @@ export default function FilterPanel({ categories, state, priceHintMin, priceHint
   const searchOnly = (state.search || state.q || "").trim();
   const resetHref = searchOnly ? `/shop?search=${encodeURIComponent(searchOnly)}` : "/shop";
 
+  const renderCategories = (nodes: FilterCategoryNode[], depth: number = 0) => (
+    <ul className={styles.catList}>
+      {nodes.map((cat) => {
+        const slug = cat.slug || "";
+        const checked = Boolean(slug && state.category_slug === slug);
+        const inSelectedPath = selectedCategoryPath.has(cat.id);
+        const hasChildren = Boolean(cat.children?.length);
+
+        return (
+          <li key={cat.id} className={styles.catItem}>
+            <label
+              className={[
+                styles.catRow,
+                checked ? styles.catRowActive : "",
+                !checked && inSelectedPath ? styles.catRowAncestor : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              style={{ paddingLeft: `${depth * 18 + 4}px` }}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                disabled={!slug}
+                onChange={(e) => onCategoryToggle(slug, e.target.checked)}
+              />
+              <span className={styles.catName}>{cat.name}</span>
+            </label>
+            {hasChildren ? <div className={styles.catChildren}>{renderCategories(cat.children || [], depth + 1)}</div> : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+
   return (
     <div>
       <section className={styles.section}>
@@ -129,25 +188,7 @@ export default function FilterPanel({ categories, state, priceHintMin, priceHint
 
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Product categories</h3>
-        <ul className={styles.catList}>
-          {categories.map((cat) => {
-            const slug = cat.slug || "";
-            const checked = Boolean(slug && state.category_slug === slug);
-            return (
-              <li key={cat.id}>
-                <label className={styles.catRow}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={!slug}
-                    onChange={(e) => onCategoryToggle(slug, e.target.checked)}
-                  />
-                  <span className={styles.catName}>{cat.name}</span>
-                </label>
-              </li>
-            );
-          })}
-        </ul>
+        {renderCategories(categories)}
       </section>
 
       <section className={styles.section}>

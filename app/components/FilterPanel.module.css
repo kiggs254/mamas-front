@@ -74,6 +74,10 @@
   gap: 4px;
 }
 
+.catItem {
+  display: block;
+}
+
 .catRow {
   display: flex;
   align-items: center;
@@ -90,6 +94,14 @@
   background: var(--color-bg-light);
 }
 
+.catRowActive {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.catRowAncestor {
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
 .catRow input {
   width: 16px;
   height: 16px;
@@ -102,6 +114,10 @@
   flex: 1;
   font-weight: 500;
   color: var(--color-heading);
+}
+
+.catChildren {
+  margin-top: 2px;
 }
 
 .row {

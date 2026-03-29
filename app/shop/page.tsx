@@ -31,6 +31,16 @@ function slugToTitle(slug: string): string {
     .join(" ");
 }
 
+function findCategoryBySlug(categories: StorefrontCategory[], slug?: string): StorefrontCategory | null {
+  if (!slug) return null;
+  for (const category of categories) {
+    if (category.slug === slug) return category;
+    const nested = findCategoryBySlug(category.children || [], slug);
+    if (nested) return nested;
+  }
+  return null;
+}
+
 const ALLOWED_LIMITS = new Set(["10", "15", "24", "48"]);
 
 function parseShopState(sp: Record<string, string | string[] | undefined>): ShopQueryState {
@@ -94,9 +104,8 @@ export default async function ShopPage({
   const priceHintMin = cheapP ? productEffectivePrice(cheapP).price : undefined;
   const priceHintMax = priceyP ? productEffectivePrice(priceyP).price : undefined;
 
-  const roots = (catData?.categories || [])
-    .filter((c) => c.parent_id == null)
-    .map((c) => ({ id: c.id, name: c.name, slug: c.slug }));
+  const categoryTree = catData?.categories || [];
+  const selectedCategory = findCategoryBySlug(categoryTree, categorySlug);
 
   const wlData =
     customer &&
@@ -110,10 +119,7 @@ export default async function ShopPage({
     pageTitle = `Search results`;
     contextLabel = `“${search}”`;
   } else if (categorySlug) {
-    pageTitle =
-      first?.category?.slug === categorySlug && first.category.name
-        ? first.category.name
-        : slugToTitle(categorySlug);
+    pageTitle = selectedCategory?.name || slugToTitle(categorySlug);
     contextLabel = "Category";
   } else if (brandSlug) {
     pageTitle =
@@ -161,7 +167,7 @@ export default async function ShopPage({
         activeFilterCount={activeFilterCount}
         filterPanel={
           <FilterPanel
-            categories={roots}
+            categories={categoryTree}
             state={state}
             priceHintMin={priceHintMin}
             priceHintMax={priceHintMax}
@@ -192,6 +198,7 @@ export default async function ShopPage({
               rating={rating}
               reviewCount={reviews}
               variantId={v0?.id}
+              ageRestricted={Boolean(product.age_restricted)}
               initialInWishlist={wl.has(product.id)}
             />
           );

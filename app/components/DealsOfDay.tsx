@@ -63,6 +63,7 @@ export default async function DealsOfDay() {
                 rating={rating}
                 reviewCount={reviews}
                 variantId={v0?.id}
+                ageRestricted={Boolean(product.age_restricted)}
                 initialInWishlist={wl.has(product.id)}
               />
             );

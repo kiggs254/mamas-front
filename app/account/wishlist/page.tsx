@@ -61,7 +61,12 @@ export default async function WishlistPage() {
                       <span className={styles.oldPrice}>KES {oldPrice.toFixed(2)}</span>
                     )}
                   </div>
-                  <WishlistItemActions productId={p.id} wishlistItemId={row.id} />
+                  <WishlistItemActions
+                    productId={p.id}
+                    wishlistItemId={row.id}
+                    ageRestricted={Boolean(p.age_restricted)}
+                    productName={p.name}
+                  />
                 </div>
               </li>
             );

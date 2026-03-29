@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Trash2, ShoppingCart } from "lucide-react";
 import { apiDelete, apiPost } from "@/lib/api";
 import { useCart } from "@/hooks/useCart";
+import { useAgeRestrictionGate } from "@/app/components/AgeRestrictionContext";
 import styles from "./wishlist.module.css";
 
-type Props = { productId: number; wishlistItemId: number };
+type Props = { productId: number; wishlistItemId: number; ageRestricted?: boolean; productName?: string };
 
-export default function WishlistItemActions({ productId, wishlistItemId }: Props) {
+export default function WishlistItemActions({ productId, wishlistItemId, ageRestricted = false, productName }: Props) {
   const { mutate } = useCart();
+  const { confirmAgeRestrictedAdd } = useAgeRestrictionGate();
   const [addingCart, setAddingCart] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [addedFeedback, setAddedFeedback] = useState(false);
@@ -17,6 +19,10 @@ export default function WishlistItemActions({ productId, wishlistItemId }: Props
   const addToCart = async () => {
     setAddingCart(true);
     try {
+      if (ageRestricted) {
+        const accepted = await confirmAgeRestrictedAdd({ productName });
+        if (!accepted) return;
+      }
       await apiPost("/storefront/cart", { product_id: productId, quantity: 1 });
       await mutate();
       window.dispatchEvent(new Event("openCart"));

@@ -19,6 +19,7 @@ export type DailyProduct = {
   rating: number;
   reviewCount: number;
   variantId?: number | null;
+  ageRestricted?: boolean;
   soldCount?: number;
   stockCount?: number;
 };
@@ -139,6 +140,8 @@ export default function DailyBestSellsClient({ products, tabs }: Props) {
                   <AddToCartButton
                     productId={p.id}
                     variantId={p.variantId}
+                    ageRestricted={p.ageRestricted}
+                    productName={p.name}
                     className={styles.dAddBtn}
                     label="Add to cart"
                     cartIconSize={14}

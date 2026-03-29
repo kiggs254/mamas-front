@@ -26,6 +26,7 @@ export type StorefrontCategory = {
   name: string;
   slug?: string;
   parent_id?: number | null;
+  age_restricted?: boolean;
   /** Category thumbnail (often `/uploads/...`); use with resolveMediaUrl */
   image?: string | null;
   children?: StorefrontCategory[];
@@ -36,12 +37,14 @@ export type StorefrontProduct = {
   name: string;
   slug?: string;
   sku?: string;
+  age_restricted?: boolean;
   description?: string | null;
   price: string | number;
   sale_price?: string | number | null;
   status?: string;
   is_featured?: boolean;
   category?: StorefrontCategory | null;
+  categories?: StorefrontCategory[];
   brand?: { id: number; name: string; slug?: string } | null;
   images?: ProductImage[];
   variants?: ProductVariant[];

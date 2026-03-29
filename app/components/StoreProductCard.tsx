@@ -23,6 +23,7 @@ type Props = {
   rating: number;
   reviewCount: number;
   variantId?: number | null;
+  ageRestricted?: boolean;
   initialInWishlist?: boolean;
   showWishlist?: boolean;
   currencyLabel?: string;
@@ -51,6 +52,7 @@ export default function StoreProductCard({
   rating,
   reviewCount,
   variantId,
+  ageRestricted = false,
   initialInWishlist,
   showWishlist = true,
   currencyLabel = "KES",
@@ -124,7 +126,14 @@ export default function StoreProductCard({
             </span>
           ) : null}
         </div>
-        <AddToCartButton productId={id} variantId={variantId} className={styles.addBtn} cartIconSize={14} />
+        <AddToCartButton
+          productId={id}
+          variantId={variantId}
+          ageRestricted={ageRestricted}
+          productName={name}
+          className={styles.addBtn}
+          cartIconSize={14}
+        />
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ import {
 import WishlistButton from "../../components/WishlistButton";
 import { apiPost } from "@/lib/api";
 import { resolveMediaUrl } from "@/lib/api-config";
+import { useAgeRestrictionGate } from "../../components/AgeRestrictionContext";
 
 const COMPARE_KEY = "cleanshelf_compare_ids";
 
@@ -324,6 +325,8 @@ export default function ProductDetailView({
               productId={product.id}
               variantId={variantId}
               quantity={qty}
+              ageRestricted={Boolean(product.age_restricted)}
+              productName={product.name}
               className={styles.addToCartInline}
             />
           </div>
@@ -470,17 +473,26 @@ function MultiAddButton({
   productId,
   variantId,
   quantity,
+  ageRestricted,
+  productName,
   className,
 }: {
   productId: number;
   variantId: number | null;
   quantity: number;
+  ageRestricted?: boolean;
+  productName?: string;
   className?: string;
 }) {
   const [loading, setLoading] = useState(false);
+  const { confirmAgeRestrictedAdd } = useAgeRestrictionGate();
   const handle = async () => {
     setLoading(true);
     try {
+      if (ageRestricted) {
+        const accepted = await confirmAgeRestrictedAdd({ productName });
+        if (!accepted) return;
+      }
       for (let i = 0; i < quantity; i++) {
         await apiPost("/storefront/cart", {
           product_id: productId,

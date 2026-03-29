@@ -46,6 +46,7 @@ export default async function DailyBestSells() {
       rating: productRatingApprox(product),
       reviewCount: productReviewCount(product),
       variantId: product.variants?.[0]?.id,
+      ageRestricted: Boolean(product.age_restricted),
       soldCount: product.sold_count ?? undefined,
       stockCount: product.stock ?? product.quantity ?? undefined,
     };
