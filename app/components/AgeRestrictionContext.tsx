@@ -80,7 +80,13 @@ export function AgeRestrictionProvider({ children }: { children: ReactNode }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="age-restriction-title"
-      className="fixed inset-0 z-[11000] flex items-center justify-center bg-black/55 px-4"
+      className="flex items-center justify-center bg-black/55 px-4"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 2147483646,
+        isolation: "isolate",
+      }}
     >
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Age restricted</p>
