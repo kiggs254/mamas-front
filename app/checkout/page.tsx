@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -99,6 +100,20 @@ export default function CheckoutPage() {
   const [loyaltyPointsToRedeem, setLoyaltyPointsToRedeem] = useState(0);
   const [loyaltyBusy, setLoyaltyBusy] = useState(false);
   const [loyaltyErr, setLoyaltyErr] = useState("");
+  const [loyaltyPortalReady, setLoyaltyPortalReady] = useState(false);
+
+  useEffect(() => {
+    setLoyaltyPortalReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loyaltyModalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [loyaltyModalOpen]);
 
   useEffect(() => {
     apiGet<{ config: LoyaltyCfg }>("/storefront/loyalty/config")
@@ -476,10 +491,42 @@ export default function CheckoutPage() {
               <div className={styles.formsPanel}>
                 {error && <div className={styles.errorBanner}>{error}</div>}
 
-                {/* Step 1: Delivery */}
+                {/* Step 1: Contact */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>
-                    <span className={styles.stepNumber}>1</span> Delivery Address
+                    <span className={styles.stepNumber}>1</span> Contact Information
+                  </h2>
+                  <div className={styles.formGrid}>
+                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
+                      <label>Email Address *</label>
+                      <input
+                        type="email"
+                        className={styles.input}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                    <div className={styles.inputGroup}>
+                      <label>First Name</label>
+                      <input className={styles.input} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" />
+                    </div>
+                    <div className={styles.inputGroup}>
+                      <label>Last Name</label>
+                      <input className={styles.input} value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
+                    </div>
+                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
+                      <label>Phone Number</label>
+                      <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+254 700 000 000" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 2: Delivery */}
+                <div className={styles.section}>
+                  <h2 className={styles.sectionTitle}>
+                    <span className={styles.stepNumber}>2</span> Delivery Address
                   </h2>
                   <div className={styles.kenyaBadge}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -567,38 +614,6 @@ export default function CheckoutPage() {
                         </button>
                       </div>
                     )}
-                  </div>
-                </div>
-
-                {/* Step 2: Contact */}
-                <div className={styles.section}>
-                  <h2 className={styles.sectionTitle}>
-                    <span className={styles.stepNumber}>2</span> Contact Information
-                  </h2>
-                  <div className={styles.formGrid}>
-                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
-                      <label>Email Address *</label>
-                      <input
-                        type="email"
-                        className={styles.input}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>First Name</label>
-                      <input className={styles.input} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" />
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>Last Name</label>
-                      <input className={styles.input} value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
-                    </div>
-                    <div className={`${styles.inputGroup} ${styles.spanFull}`}>
-                      <label>Phone Number</label>
-                      <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+254 700 000 000" />
-                    </div>
                   </div>
                 </div>
 
@@ -774,8 +789,10 @@ export default function CheckoutPage() {
         <p>© {new Date().getFullYear()} Cleanshelf Supermarket. All rights reserved. Secured by SSL.</p>
       </footer>
 
-      {loyaltyModalOpen && (
-        <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-labelledby="loyalty-modal-title">
+      {loyaltyPortalReady &&
+        loyaltyModalOpen &&
+        createPortal(
+          <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-labelledby="loyalty-modal-title">
           <div className={styles.modalCard}>
             <button
               type="button"
@@ -866,8 +883,9 @@ export default function CheckoutPage() {
               </>
             )}
           </div>
-        </div>
-      )}
+        </div>,
+          document.body
+        )}
     </div>
   );
 }
