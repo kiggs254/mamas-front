@@ -138,7 +138,7 @@ export default async function Footer() {
                 <Link href="/shop?on_sale=true">Deals</Link>
               </li>
               <li>
-                <Link href="/recipes">Recipes</Link>
+                <Link href="/blogs">Blog</Link>
               </li>
             </ul>
           </div>

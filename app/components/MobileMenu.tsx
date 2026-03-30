@@ -209,8 +209,8 @@ export default function MobileMenu({ phone, signedIn, accountLabel, categories }
               Subscriptions <span className={styles.badgeNew}>New</span>
             </span>
           </Link>
-          <Link href="/recipes" className={styles.navLink} prefetch={false} onClick={close}>
-            Recipes
+          <Link href="/blogs" className={styles.navLink} prefetch={false} onClick={close}>
+            Blog
           </Link>
           <Link href="/faqs" className={styles.navLink} prefetch={false} onClick={close}>
             FAQs

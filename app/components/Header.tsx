@@ -143,8 +143,8 @@ export default async function Header() {
             <Link href="/subscriptions" className={styles.navLink} prefetch={false}>
               Subscriptions <span className={styles.new}>New</span>
             </Link>
-            <Link href="/recipes" className={styles.navLink} prefetch={false}>
-              Recipes
+            <Link href="/blogs" className={styles.navLink} prefetch={false}>
+              Blog
             </Link>
             <Link href="/faqs" className={styles.navLink} prefetch={false}>
               FAQs

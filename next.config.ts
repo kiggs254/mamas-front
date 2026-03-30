@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const backendOrigin = process.env.BACKEND_ORIGIN || "http://127.0.0.1:4000";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [{ source: "/recipes", destination: "/blogs", permanent: true }];
+  },
   async rewrites() {
     return [
       {
