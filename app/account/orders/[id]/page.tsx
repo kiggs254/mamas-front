@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { serverApiGet } from "@/lib/server-api";
+import { formatShopDate } from "@/lib/shop-datetime";
 import styles from "../orders.module.css";
 
 type OrderItem = {
@@ -54,10 +55,14 @@ function statusCls(s?: string) {
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const data = await serverApiGet<{ order: OrderDetail }>(`/storefront/customer/orders/${id}`);
+  const [data, settingsData] = await Promise.all([
+    serverApiGet<{ order: OrderDetail }>(`/storefront/customer/orders/${id}`),
+    serverApiGet<{ settings: Record<string, string> }>("/storefront/settings"),
+  ]);
   if (!data?.order) notFound();
 
   const order = data.order;
+  const shopTimeZone = settingsData?.settings?.shop_timezone?.trim() || undefined;
   const currency = order.currency || "KES";
   const items = order.items || [];
   const addr = order.shipping_address;
@@ -74,7 +79,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <div className={styles.detailHeaderStrip}>
         <div>
           <h1 className={styles.detailOrderNum}>Order {order.order_number || `#${order.id}`}</h1>
-          <span className={styles.detailDate}>Placed {formatDate(order.created_at)}</span>
+          <span className={styles.detailDate}>
+            Placed {formatShopDate(order.created_at, shopTimeZone, { month: "long" })}
+          </span>
         </div>
         <div className={styles.detailBadges}>
           <span className={`${styles.statusBadge} ${styles[statusCls(order.status)]}`}>

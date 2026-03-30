@@ -4,8 +4,12 @@ import OrdersClient from "./OrdersClient";
 import styles from "./orders.module.css";
 
 export default async function OrdersPage() {
-  const data = await serverApiGet<{ orders: OrderSummary[] }>("/storefront/customer/orders?limit=50");
+  const [data, settingsData] = await Promise.all([
+    serverApiGet<{ orders: OrderSummary[] }>("/storefront/customer/orders?limit=50"),
+    serverApiGet<{ settings: Record<string, string> }>("/storefront/settings"),
+  ]);
   const orders = data?.orders || [];
+  const shopTimeZone = settingsData?.settings?.shop_timezone?.trim() || undefined;
 
   return (
     <div className={styles.container}>
@@ -16,7 +20,7 @@ export default async function OrdersPage() {
         </div>
       </div>
 
-      <OrdersClient orders={orders} />
+      <OrdersClient orders={orders} shopTimeZone={shopTimeZone} />
     </div>
   );
 }

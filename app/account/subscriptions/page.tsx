@@ -1,20 +1,20 @@
 import Link from "next/link";
 import { serverApiGet } from "@/lib/server-api";
+import { formatShopDate } from "@/lib/shop-datetime";
 import type { SubscriptionRow } from "@/types/api";
 import styles from "./subscriptions.module.css";
-
-function formatDate(d?: string) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
-}
 
 function statusCls(s?: string) {
   return (s || "").toLowerCase();
 }
 
 export default async function AccountSubscriptionsPage() {
-  const data = await serverApiGet<{ subscriptions: SubscriptionRow[] }>("/storefront/customer/subscriptions");
+  const [data, settingsData] = await Promise.all([
+    serverApiGet<{ subscriptions: SubscriptionRow[] }>("/storefront/customer/subscriptions"),
+    serverApiGet<{ settings: Record<string, string> }>("/storefront/settings"),
+  ]);
   const subs = data?.subscriptions || [];
+  const shopTimeZone = settingsData?.settings?.shop_timezone?.trim() || undefined;
 
   return (
     <div className={styles.page}>
@@ -57,11 +57,11 @@ export default async function AccountSubscriptionsPage() {
                   <div className={styles.dateRow}>
                     <div className={styles.dateItem}>
                       <span className={styles.dateLabel}>Next delivery</span>
-                      <span className={styles.dateValue}>{formatDate(s.next_delivery_date)}</span>
+                      <span className={styles.dateValue}>{formatShopDate(s.next_delivery_date, shopTimeZone)}</span>
                     </div>
                     <div className={styles.dateItem}>
                       <span className={styles.dateLabel}>Next payment</span>
-                      <span className={styles.dateValue}>{formatDate(s.next_payment_date)}</span>
+                      <span className={styles.dateValue}>{formatShopDate(s.next_payment_date, shopTimeZone)}</span>
                     </div>
                     <div className={styles.dateItem}>
                       <span className={styles.dateLabel}>Ref</span>

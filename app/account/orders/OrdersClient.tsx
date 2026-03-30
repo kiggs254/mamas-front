@@ -4,18 +4,20 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Package, Search } from "lucide-react";
 import type { OrderSummary } from "@/types/api";
+import { formatShopDate } from "@/lib/shop-datetime";
 import styles from "./orders.module.css";
-
-function formatDate(d?: string) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
-}
 
 function statusClass(s?: string) {
   return (s || "pending").toLowerCase().replace(/\s+/g, "_");
 }
 
-export default function OrdersClient({ orders }: { orders: OrderSummary[] }) {
+export default function OrdersClient({
+  orders,
+  shopTimeZone,
+}: {
+  orders: OrderSummary[];
+  shopTimeZone?: string;
+}) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -61,7 +63,7 @@ export default function OrdersClient({ orders }: { orders: OrderSummary[] }) {
                 <div className={styles.orderHeader}>
                   <div className={styles.orderInfo}>
                     <span className={styles.orderId}>{order.order_number || `#${order.id}`}</span>
-                    <span className={styles.orderDate}>{formatDate(order.created_at)}</span>
+                    <span className={styles.orderDate}>{formatShopDate(order.created_at, shopTimeZone)}</span>
                   </div>
                   <div className={styles.orderStatusContainer}>
                     <span className={`${styles.statusBadge} ${styles[statusClass(order.status)]}`}>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCustomer } from "@/lib/auth";
 import { serverApiGet } from "@/lib/server-api";
+import { formatShopDate } from "@/lib/shop-datetime";
 import type { OrderSummary } from "@/types/api";
 import styles from "./page.module.css";
 
@@ -9,17 +10,14 @@ function statusClass(status: string) {
   return s;
 }
 
-function formatDate(d?: string) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
-}
-
 export default async function AccountDashboard() {
   const customer = await getCustomer();
-  const ordersData = await serverApiGet<{ orders: OrderSummary[]; total: number }>(
-    "/storefront/customer/orders?limit=5"
-  );
-  const wishData = await serverApiGet<{ items: unknown[] }>("/storefront/wishlist");
+  const [ordersData, wishData, settingsData] = await Promise.all([
+    serverApiGet<{ orders: OrderSummary[]; total: number }>("/storefront/customer/orders?limit=5"),
+    serverApiGet<{ items: unknown[] }>("/storefront/wishlist"),
+    serverApiGet<{ settings: Record<string, string> }>("/storefront/settings"),
+  ]);
+  const shopTimeZone = settingsData?.settings?.shop_timezone?.trim() || undefined;
 
   const orderCount = ordersData?.total ?? 0;
   const recentOrders = ordersData?.orders || [];
@@ -103,7 +101,7 @@ export default async function AccountDashboard() {
               <Link key={order.id} href={`/account/orders/${order.id}`} className={styles.recentCard}>
                 <div className={styles.recentCardLeft}>
                   <span className={styles.recentOrderNum}>{order.order_number || `#${order.id}`}</span>
-                  <span className={styles.recentDate}>{formatDate(order.created_at)}</span>
+                  <span className={styles.recentDate}>{formatShopDate(order.created_at, shopTimeZone)}</span>
                 </div>
                 <div className={styles.recentCardRight}>
                   <span className={`${styles.miniStatusBadge} ${styles[statusClass(order.status || "pending")]}`}>
