@@ -1,0 +1,57 @@
+.slide {
+  flex: 0 0 auto;
+  width: min(340px, 88vw);
+  max-width: 340px;
+  box-sizing: border-box;
+}
+
+.card {
+  margin: 0;
+  padding: 22px 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+  color: var(--color-primary);
+}
+
+.quoteTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.quote {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text);
+  margin: 0;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.author {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-heading);
+}

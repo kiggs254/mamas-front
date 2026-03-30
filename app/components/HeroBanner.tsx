@@ -1,15 +1,33 @@
 import { serverApiGet } from "@/lib/server-api";
-import type { ShopSettings } from "@/types/api";
+import type { Banner, ShopSettings } from "@/types/api";
+import { resolveMediaUrl } from "@/lib/api-config";
 import styles from "./HeroBanner.module.css";
 import HeroLiveSearch from "./HeroLiveSearch";
+import HeroBannerSlideshow from "./HeroBannerSlideshow";
 
 export default async function HeroBanner() {
-  const settingsData = await serverApiGet<{ settings: ShopSettings }>("/storefront/settings");
+  const [settingsData, heroBannerData] = await Promise.all([
+    serverApiGet<{ settings: ShopSettings }>("/storefront/settings"),
+    serverApiGet<{ banners: Banner[] }>("/storefront/banners?position=hero"),
+  ]);
+
   const shopName = settingsData?.settings?.shop_name || "Cleanshelf Supermarket";
   const tagline = settingsData?.settings?.shop_description || "Save on fresh produce and daily essentials";
 
+  const raw = heroBannerData?.banners || [];
+  const heroSlides = raw
+    .filter((b) => b.image_url && String(b.image_url).trim())
+    .map((b) => ({
+      id: b.id,
+      image: resolveMediaUrl(b.image_url),
+      title: b.title,
+    }));
+
+  const useBannerBg = heroSlides.length > 0;
+
   return (
-    <section className={styles.hero}>
+    <section className={`${styles.hero} ${useBannerBg ? styles.heroWithBanners : ""}`}>
+      {useBannerBg ? <HeroBannerSlideshow slides={heroSlides} /> : null}
       <div className={styles.heroContent}>
         <h1>
           Welcome to {shopName}

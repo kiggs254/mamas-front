@@ -79,6 +79,8 @@ export type Banner = {
   id: number;
   title?: string;
   image_url?: string;
+  /** Backend field; also exposed as link_url in some clients */
+  link?: string;
   link_url?: string;
   position?: string;
 };

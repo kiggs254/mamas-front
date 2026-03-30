@@ -13,6 +13,33 @@
   background-color: #d4ede8;
 }
 
+.heroWithBanners {
+  background-image: none;
+}
+
+.heroSlideshow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.heroSlide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.heroSlide[data-active="true"] {
+  opacity: 1;
+}
+
+.heroSlideImg {
+  object-fit: cover;
+  object-position: center right;
+}
+
 /* subtle left overlay so text is always readable */
 .hero::before {
   content: '';

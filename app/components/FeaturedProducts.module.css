@@ -97,6 +97,13 @@
   box-sizing: border-box;
 }
 
+.subtitleMuted {
+  font-size: 14px;
+  color: var(--color-text-light);
+  margin: 6px 0 0;
+  font-weight: 400;
+}
+
 .empty {
   margin: 0;
   font-size: 14px;

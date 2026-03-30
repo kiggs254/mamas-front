@@ -20,6 +20,20 @@
   transition: var(--transition);
 }
 
+.banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(255, 255, 255, 0.5) 45%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
+  pointer-events: none;
+}
+
 .bannerBgWrap {
   position: absolute;
   inset: 0;
@@ -39,7 +53,7 @@
 
 .bannerInner {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   transform: translateZ(0);
   min-height: 200px;
   padding: 35px 30px;
