@@ -80,6 +80,32 @@ export default function CheckoutPage() {
     google_maps_api_key: string;
   } | null>(null);
 
+  type LoyaltyCfg = {
+    enabled: boolean;
+    points_per_currency_discount: number;
+    min_points_to_redeem: number;
+  };
+  const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyCfg | null>(null);
+  const [loyaltyPreview, setLoyaltyPreview] = useState<{
+    eligible: boolean;
+    balance: number;
+    max_redeemable_points: number;
+    estimated_discount_max: number;
+  } | null>(null);
+  const [loyaltyModalOpen, setLoyaltyModalOpen] = useState(false);
+  const [loyaltyStep, setLoyaltyStep] = useState<"send" | "otp" | "points">("send");
+  const [otpCode, setOtpCode] = useState("");
+  const [redemptionToken, setRedemptionToken] = useState<string | null>(null);
+  const [loyaltyPointsToRedeem, setLoyaltyPointsToRedeem] = useState(0);
+  const [loyaltyBusy, setLoyaltyBusy] = useState(false);
+  const [loyaltyErr, setLoyaltyErr] = useState("");
+
+  useEffect(() => {
+    apiGet<{ config: LoyaltyCfg }>("/storefront/loyalty/config")
+      .then((d) => setLoyaltyConfig(d.config))
+      .catch(() => setLoyaltyConfig(null));
+  }, []);
+
   useEffect(() => {
     const syncBranch = () => {
       const sel = readSelectedBranch();
@@ -139,6 +165,28 @@ export default function CheckoutPage() {
     [items]
   );
 
+  useEffect(() => {
+    if (!loyaltyConfig?.enabled || !email.trim().includes("@") || cartPayload.length === 0) {
+      setLoyaltyPreview(null);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      apiPost<{
+        eligible: boolean;
+        balance: number;
+        max_redeemable_points: number;
+        estimated_discount_max: number;
+      }>("/storefront/loyalty/preview", {
+        email: email.trim(),
+        items: cartPayload,
+        ...(coupon.trim() ? { coupon_code: coupon.trim() } : {}),
+      })
+        .then((d) => setLoyaltyPreview(d))
+        .catch(() => setLoyaltyPreview(null));
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [email, cartPayload, coupon, loyaltyConfig?.enabled]);
+
   const subtotal = useMemo(
     () => items.reduce((acc, line) => acc + lineUnitPrice(line) * line.quantity, 0),
     [items]
@@ -163,8 +211,12 @@ export default function CheckoutPage() {
 
   const selectedShip = shipMethods.find((m) => String(m.id) === selectedShipKey);
   const shipCost = selectedShip ? Number(selectedShip.cost || 0) : 0;
-  const discount = discountPreview ?? 0;
-  const total = Math.max(0, subtotal + shipCost - discount);
+  const couponDiscount = discountPreview ?? 0;
+  const loyaltyDiscountAmount = useMemo(() => {
+    if (!redemptionToken || loyaltyPointsToRedeem <= 0 || !loyaltyConfig) return 0;
+    return loyaltyPointsToRedeem / loyaltyConfig.points_per_currency_discount;
+  }, [redemptionToken, loyaltyPointsToRedeem, loyaltyConfig]);
+  const total = Math.max(0, subtotal + shipCost - couponDiscount - loyaltyDiscountAmount);
 
   const onDeliveryPlaceResolved = useCallback((p: PlaceResolved) => {
     setAddress1(p.address1);
@@ -225,6 +277,56 @@ export default function CheckoutPage() {
     }
   };
 
+  const openLoyaltyModal = () => {
+    setLoyaltyErr("");
+    setOtpCode("");
+    setLoyaltyStep("send");
+    setLoyaltyModalOpen(true);
+  };
+
+  const sendLoyaltyOtp = async () => {
+    setLoyaltyErr("");
+    setLoyaltyBusy(true);
+    try {
+      await apiPost("/storefront/loyalty/redemption/send-otp", { email: email.trim() });
+      setLoyaltyStep("otp");
+    } catch (e: unknown) {
+      setLoyaltyErr(e instanceof Error ? e.message : "Could not send code");
+    } finally {
+      setLoyaltyBusy(false);
+    }
+  };
+
+  const verifyLoyaltyOtp = async () => {
+    setLoyaltyErr("");
+    setLoyaltyBusy(true);
+    try {
+      const res = await apiPost<{ redemption_token: string; expires_in_minutes: number }>(
+        "/storefront/loyalty/redemption/verify-otp",
+        { email: email.trim(), code: otpCode.trim() }
+      );
+      setRedemptionToken(res.redemption_token);
+      const max = loyaltyPreview?.max_redeemable_points ?? 0;
+      setLoyaltyPointsToRedeem(max > 0 ? max : 0);
+      setLoyaltyStep("points");
+    } catch (e: unknown) {
+      setLoyaltyErr(e instanceof Error ? e.message : "Invalid code");
+    } finally {
+      setLoyaltyBusy(false);
+    }
+  };
+
+  const applyLoyaltyPoints = () => {
+    setLoyaltyModalOpen(false);
+  };
+
+  const clearLoyaltyRedemption = () => {
+    setRedemptionToken(null);
+    setLoyaltyPointsToRedeem(0);
+    setOtpCode("");
+    setLoyaltyStep("send");
+  };
+
   const placeOrder = async () => {
     setError("");
     if (!email || !address1) {
@@ -277,6 +379,14 @@ export default function CheckoutPage() {
           payment_method: paymentMethod,
           coupon_code: coupon.trim() || undefined,
           ...(branchIdForApi != null ? { branch_id: branchIdForApi } : {}),
+          ...(redemptionToken && loyaltyPointsToRedeem > 0
+            ? {
+                loyalty_redemption: {
+                  token: redemptionToken,
+                  points: loyaltyPointsToRedeem,
+                },
+              }
+            : {}),
         }
       );
 
@@ -571,6 +681,29 @@ export default function CheckoutPage() {
               <div className={styles.summaryContainer}>
                 <div className={styles.summaryPanel}>
                   <h2 className={styles.summaryTitle}>Order Summary</h2>
+                  {loyaltyConfig?.enabled && loyaltyPreview?.eligible && email.trim().includes("@") && (
+                    <div style={{ marginBottom: 14 }}>
+                      {!redemptionToken ? (
+                        <button type="button" className={styles.couponBtn} onClick={openLoyaltyModal}>
+                          Redeem loyalty points
+                        </button>
+                      ) : (
+                        <div style={{ fontSize: 14 }}>
+                          <span>
+                            {loyaltyPointsToRedeem} pts (−KES {loyaltyDiscountAmount.toFixed(2)})
+                          </span>
+                          <button
+                            type="button"
+                            className={styles.recalcLink}
+                            style={{ marginLeft: 10 }}
+                            onClick={clearLoyaltyRedemption}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className={styles.itemList}>
                     {items.map((line) => {
                       const p = line.product as StorefrontProduct | undefined;
@@ -609,10 +742,16 @@ export default function CheckoutPage() {
                         )}
                       </span>
                     </div>
-                    {discount > 0 && (
+                    {couponDiscount > 0 && (
                       <div className={styles.totalRow}>
-                        <span>Discount</span>
-                        <span className={styles.discountAmt}>-KES {discount.toFixed(2)}</span>
+                        <span>Coupon</span>
+                        <span className={styles.discountAmt}>-KES {couponDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {loyaltyDiscountAmount > 0 && (
+                      <div className={styles.totalRow}>
+                        <span>Loyalty</span>
+                        <span className={styles.discountAmt}>-KES {loyaltyDiscountAmount.toFixed(2)}</span>
                       </div>
                     )}
                     <div className={styles.totalRow}>
@@ -634,6 +773,101 @@ export default function CheckoutPage() {
       <footer className={styles.footer}>
         <p>© {new Date().getFullYear()} Cleanshelf Supermarket. All rights reserved. Secured by SSL.</p>
       </footer>
+
+      {loyaltyModalOpen && (
+        <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-labelledby="loyalty-modal-title">
+          <div className={styles.modalCard}>
+            <button
+              type="button"
+              className={styles.modalClose}
+              onClick={() => setLoyaltyModalOpen(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h3 className={styles.modalTitle} id="loyalty-modal-title">
+              Redeem loyalty points
+            </h3>
+            {loyaltyStep === "send" && (
+              <>
+                <p className={styles.modalText}>We&apos;ll email a verification code to {email.trim()}.</p>
+                {loyaltyErr && <p className={styles.couponError}>{loyaltyErr}</p>}
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.submitBtn}
+                    onClick={sendLoyaltyOtp}
+                    disabled={loyaltyBusy}
+                  >
+                    {loyaltyBusy ? "Sending…" : "Send code"}
+                  </button>
+                </div>
+              </>
+            )}
+            {loyaltyStep === "otp" && (
+              <>
+                <p className={styles.modalText}>Enter the code from your email.</p>
+                <input
+                  className={styles.input}
+                  style={{ width: "100%", marginBottom: 8 }}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder="6-digit code"
+                  inputMode="numeric"
+                />
+                {loyaltyErr && <p className={styles.couponError}>{loyaltyErr}</p>}
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.submitBtn}
+                    onClick={verifyLoyaltyOtp}
+                    disabled={loyaltyBusy || !otpCode.trim()}
+                  >
+                    {loyaltyBusy ? "Checking…" : "Verify"}
+                  </button>
+                </div>
+              </>
+            )}
+            {loyaltyStep === "points" && (
+              <>
+                <p className={styles.modalText}>
+                  Balance {loyaltyPreview?.balance ?? 0} pts · Up to {loyaltyPreview?.max_redeemable_points ?? 0}{" "}
+                  pts for this order.
+                </p>
+                {(loyaltyPreview?.max_redeemable_points ?? 0) <= 0 ? (
+                  <p className={styles.couponError}>No points can be applied to this cart.</p>
+                ) : (
+                  <>
+                    <input
+                      type="range"
+                      min={Math.min(
+                        loyaltyConfig?.min_points_to_redeem ?? 1,
+                        loyaltyPreview?.max_redeemable_points ?? 1
+                      )}
+                      max={loyaltyPreview?.max_redeemable_points ?? 0}
+                      value={Math.min(loyaltyPointsToRedeem, loyaltyPreview?.max_redeemable_points ?? 0)}
+                      onChange={(e) => setLoyaltyPointsToRedeem(Number(e.target.value))}
+                      style={{ width: "100%" }}
+                    />
+                    <p className={styles.modalText}>
+                      {loyaltyPointsToRedeem} pts · ~KES{" "}
+                      {(
+                        loyaltyPointsToRedeem / (loyaltyConfig?.points_per_currency_discount || 100)
+                      ).toFixed(2)}{" "}
+                      off
+                    </p>
+                  </>
+                )}
+                <div className={styles.modalActions}>
+                  <button type="button" className={styles.submitBtn} onClick={applyLoyaltyPoints}>
+                    Apply to order
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -620,6 +620,60 @@
   border-top: 1px solid var(--color-border);
 }
 
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modalCard {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--color-heading);
+}
+
+.modalText {
+  font-size: 14px;
+  color: var(--color-text-light);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.modalClose {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-light);
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
 @media (max-width: 768px) {
   .container {
     grid-template-columns: 1fr;
