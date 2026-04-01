@@ -4,6 +4,7 @@ import LayoutWrapper from "./components/LayoutWrapper";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import BranchCookieSync from "./components/BranchCookieSync";
+import CatalogStockRefresher from "./components/CatalogStockRefresher";
 import { serverApiGet } from "@/lib/server-api";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default async function RootLayout({
       </head>
       <body>
         <BranchCookieSync />
+        <CatalogStockRefresher />
         {scripts.custom_scripts_body_start ? (
           <div dangerouslySetInnerHTML={{ __html: scripts.custom_scripts_body_start }} />
         ) : null}

@@ -95,6 +95,7 @@ export default function CheckoutPage() {
   } | null>(null);
   const [loyaltyModalOpen, setLoyaltyModalOpen] = useState(false);
   const [loyaltyStep, setLoyaltyStep] = useState<"send" | "otp" | "points">("send");
+  const [loyaltyOtpChannel, setLoyaltyOtpChannel] = useState<"sms" | "whatsapp">("sms");
   const [otpCode, setOtpCode] = useState("");
   const [redemptionToken, setRedemptionToken] = useState<string | null>(null);
   const [loyaltyPointsToRedeem, setLoyaltyPointsToRedeem] = useState(0);
@@ -180,8 +181,13 @@ export default function CheckoutPage() {
     [items]
   );
 
+  const phoneLooksCompleteForLoyalty = useMemo(() => {
+    const d = phone.replace(/\D/g, "");
+    return d.length >= 9;
+  }, [phone]);
+
   useEffect(() => {
-    if (!loyaltyConfig?.enabled || !email.trim().includes("@") || cartPayload.length === 0) {
+    if (!loyaltyConfig?.enabled || !phoneLooksCompleteForLoyalty || cartPayload.length === 0) {
       setLoyaltyPreview(null);
       return;
     }
@@ -192,7 +198,8 @@ export default function CheckoutPage() {
         max_redeemable_points: number;
         estimated_discount_max: number;
       }>("/storefront/loyalty/preview", {
-        email: email.trim(),
+        phone: phone.trim(),
+        ...(email.trim().includes("@") ? { email: email.trim() } : {}),
         items: cartPayload,
         ...(coupon.trim() ? { coupon_code: coupon.trim() } : {}),
       })
@@ -200,7 +207,7 @@ export default function CheckoutPage() {
         .catch(() => setLoyaltyPreview(null));
     }, 600);
     return () => window.clearTimeout(t);
-  }, [email, cartPayload, coupon, loyaltyConfig?.enabled]);
+  }, [phone, phoneLooksCompleteForLoyalty, email, cartPayload, coupon, loyaltyConfig?.enabled]);
 
   const subtotal = useMemo(
     () => items.reduce((acc, line) => acc + lineUnitPrice(line) * line.quantity, 0),
@@ -296,6 +303,7 @@ export default function CheckoutPage() {
     setLoyaltyErr("");
     setOtpCode("");
     setLoyaltyStep("send");
+    setLoyaltyOtpChannel("sms");
     setLoyaltyModalOpen(true);
   };
 
@@ -303,7 +311,10 @@ export default function CheckoutPage() {
     setLoyaltyErr("");
     setLoyaltyBusy(true);
     try {
-      await apiPost("/storefront/loyalty/redemption/send-otp", { email: email.trim() });
+      await apiPost("/storefront/loyalty/redemption/send-otp", {
+        phone: phone.trim(),
+        channel: loyaltyOtpChannel,
+      });
       setLoyaltyStep("otp");
     } catch (e: unknown) {
       setLoyaltyErr(e instanceof Error ? e.message : "Could not send code");
@@ -318,7 +329,7 @@ export default function CheckoutPage() {
     try {
       const res = await apiPost<{ redemption_token: string; expires_in_minutes: number }>(
         "/storefront/loyalty/redemption/verify-otp",
-        { email: email.trim(), code: otpCode.trim() }
+        { phone: phone.trim(), code: otpCode.trim() }
       );
       setRedemptionToken(res.redemption_token);
       const max = loyaltyPreview?.max_redeemable_points ?? 0;
@@ -341,6 +352,13 @@ export default function CheckoutPage() {
     setOtpCode("");
     setLoyaltyStep("send");
   };
+
+  useEffect(() => {
+    setRedemptionToken(null);
+    setLoyaltyPointsToRedeem(0);
+    setOtpCode("");
+    setLoyaltyStep("send");
+  }, [phone]);
 
   const placeOrder = async () => {
     setError("");
@@ -519,6 +537,11 @@ export default function CheckoutPage() {
                     <div className={`${styles.inputGroup} ${styles.spanFull}`}>
                       <label>Phone Number</label>
                       <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+254 700 000 000" />
+                      {loyaltyConfig?.enabled && loyaltyPreview?.eligible && phoneLooksCompleteForLoyalty && (
+                        <p style={{ marginTop: 6, fontSize: 13, opacity: 0.85 }}>
+                          You can redeem loyalty points — see order summary.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -696,7 +719,7 @@ export default function CheckoutPage() {
               <div className={styles.summaryContainer}>
                 <div className={styles.summaryPanel}>
                   <h2 className={styles.summaryTitle}>Order Summary</h2>
-                  {loyaltyConfig?.enabled && loyaltyPreview?.eligible && email.trim().includes("@") && (
+                  {loyaltyConfig?.enabled && loyaltyPreview?.eligible && phoneLooksCompleteForLoyalty && (
                     <div style={{ marginBottom: 14 }}>
                       {!redemptionToken ? (
                         <button type="button" className={styles.couponBtn} onClick={openLoyaltyModal}>
@@ -807,14 +830,42 @@ export default function CheckoutPage() {
             </h3>
             {loyaltyStep === "send" && (
               <>
-                <p className={styles.modalText}>We&apos;ll email a verification code to {email.trim()}.</p>
+                <p className={styles.modalText}>
+                  Send a verification code to {phone.trim() || "your phone"} via SMS or WhatsApp.
+                </p>
+                <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className={styles.couponBtn}
+                    onClick={() => setLoyaltyOtpChannel("sms")}
+                    style={
+                      loyaltyOtpChannel === "sms"
+                        ? { fontWeight: 700, outline: "2px solid currentColor" }
+                        : undefined
+                    }
+                  >
+                    SMS
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.couponBtn}
+                    onClick={() => setLoyaltyOtpChannel("whatsapp")}
+                    style={
+                      loyaltyOtpChannel === "whatsapp"
+                        ? { fontWeight: 700, outline: "2px solid currentColor" }
+                        : undefined
+                    }
+                  >
+                    WhatsApp
+                  </button>
+                </div>
                 {loyaltyErr && <p className={styles.couponError}>{loyaltyErr}</p>}
                 <div className={styles.modalActions}>
                   <button
                     type="button"
                     className={styles.submitBtn}
                     onClick={sendLoyaltyOtp}
-                    disabled={loyaltyBusy}
+                    disabled={loyaltyBusy || !phone.trim()}
                   >
                     {loyaltyBusy ? "Sending…" : "Send code"}
                   </button>
@@ -823,7 +874,9 @@ export default function CheckoutPage() {
             )}
             {loyaltyStep === "otp" && (
               <>
-                <p className={styles.modalText}>Enter the code from your email.</p>
+                <p className={styles.modalText}>
+                  Enter the {loyaltyOtpChannel === "whatsapp" ? "WhatsApp" : "SMS"} code we sent you.
+                </p>
                 <input
                   className={styles.input}
                   style={{ width: "100%", marginBottom: 8 }}
