@@ -22,7 +22,7 @@ export default async function StoreLocatorPage() {
         <p className={shell.eyebrow}>Visit us</p>
         <h1 className={shell.title}>Store locator</h1>
         <div className={shell.titleUnderline} />
-        <p className={shell.lead}>Find a Cleanshelf location, hours, and contact details.</p>
+        <p className={shell.lead}>Find a Mama's Market location, hours, and contact details.</p>
       </header>
 
       {!data?.stores?.length ? (

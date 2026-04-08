@@ -8,9 +8,9 @@ import CatalogStockRefresher from "./components/CatalogStockRefresher";
 import { serverApiGet } from "@/lib/server-api";
 
 export const metadata: Metadata = {
-  title: "Cleanshelf Supermarket - Shop More for Less",
+  title: "Mama's Market - Authentic World Flavours in Vaasa",
   description:
-    "Cleanshelf Supermarket - Your daily fresh grocery needs in Nairobi. Fresh vegetables, fruits, dairy, meats and more at the best prices. Located off Chiromo Road, Westlands.",
+    "Mama's Market — your local destination for authentic world flavours in Vaasa. Fresh produce, international groceries, and everyday essentials. Located at Vaasanpuistikko 20, Vaasa.",
 };
 
 export default async function RootLayout({

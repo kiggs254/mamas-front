@@ -11,8 +11,8 @@ export default async function HeroBanner() {
     serverApiGet<{ banners: Banner[] }>("/storefront/banners?position=hero"),
   ]);
 
-  const shopName = settingsData?.settings?.shop_name || "Cleanshelf Supermarket";
-  const tagline = settingsData?.settings?.shop_description || "Save on fresh produce and daily essentials";
+  const shopName = settingsData?.settings?.shop_name || "Mama's Market";
+  const tagline = settingsData?.settings?.shop_description || "Your local destination for authentic world flavours";
 
   const raw = heroBannerData?.banners || [];
   const heroSlides = raw

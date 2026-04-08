@@ -509,7 +509,7 @@ export default function CheckoutPage() {
         <header className={styles.header}>
           <div className={styles.headerInner}>
             <Link href="/" className={styles.logo}>
-              <img src="/images/logo.png" alt="Cleanshelf Supermarket" />
+              <img src="/images/logo.png" alt="Mama's Market" />
             </Link>
           </div>
         </header>
@@ -543,7 +543,7 @@ export default function CheckoutPage() {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.logo}>
-            <img src="/images/logo.png" alt="Cleanshelf Supermarket" />
+            <img src="/images/logo.png" alt="Mama's Market" />
           </Link>
           <div className={styles.secureBadge}>
             <ShieldIcon size={18} color="var(--color-primary)" />
@@ -866,7 +866,7 @@ export default function CheckoutPage() {
       </main>
 
       <footer className={styles.footer}>
-        <p>© {new Date().getFullYear()} Cleanshelf Supermarket. All rights reserved. Secured by SSL.</p>
+        <p>© {new Date().getFullYear()} Mama's Market. All rights reserved. Secured by SSL.</p>
       </footer>
 
       {loyaltyPortalReady &&

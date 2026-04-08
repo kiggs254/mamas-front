@@ -23,16 +23,16 @@ export default async function Footer() {
 
   const pages = pagesData?.pages?.slice(0, 8) || [];
   const settings = settingsData?.settings || {};
-  const phone = settings.shop_phone || "0117 262 933";
-  const email = settings.shop_email || "info@cleanshelf.co.ke";
-  const address = settings.shop_address || "Off Chiromo Road, Westlands, Nairobi";
+  const phone = settings.shop_phone || "044 730 9126";
+  const email = settings.shop_email || "mamasmarket.vaasa@gmail.com";
+  const address = settings.shop_address || "Vaasanpuistikko 20, Vaasa";
 
   return (
     <footer className={styles.footer}>
       <div className={styles.ctaBanner}>
         <div className={styles.ctaContent}>
           <h2>Stay home & get your daily needs from our shop</h2>
-          <p>Start Your Daily Shopping with {settings.shop_name || "Cleanshelf Supermarket"}</p>
+          <p>Start Your Daily Shopping with {settings.shop_name || "Mama's Market"}</p>
           <form action="/shop" method="get" className={styles.ctaSearch}>
             <input type="email" name="q" placeholder="Search products…" />
             <button type="submit">
@@ -43,7 +43,7 @@ export default async function Footer() {
         <div className={styles.ctaImage}>
           <img
             src="/images/logo.png"
-            alt="Cleanshelf"
+            alt="Mama's Market"
             style={{ width: "200px", filter: "brightness(0) invert(1)", opacity: 0.2 }}
           />
         </div>
@@ -53,9 +53,9 @@ export default async function Footer() {
         <div className={styles.footerGrid}>
           <div className={styles.footerBrand}>
             <div className={styles.footerLogo}>
-              <img src="/images/logo.png" alt="Cleanshelf Supermarket" style={{ height: "45px", width: "auto" }} />
+              <img src="/images/logo.png" alt="Mama's Market" style={{ height: "45px", width: "auto" }} />
             </div>
-            <p>{settings.shop_description || "Cleanshelf Supermarket — fresh groceries in Nairobi."}</p>
+            <p>{settings.shop_description || "Mama's Market — your local destination for authentic world flavours in Vaasa."}</p>
             <div className={styles.footerContact}>
               <div>
                 <LocationIcon size={14} color="var(--color-primary)" /> <strong>Address:</strong> {address}
@@ -149,7 +149,7 @@ export default async function Footer() {
         <div className={styles.footerBottomInner}>
           <div className={styles.copyright}>
             © {new Date().getFullYear()},{" "}
-            <Link href="/">{settings.shop_name || "Cleanshelf Supermarket"}</Link> — Shop More for Less. All rights
+            <Link href="/">{settings.shop_name || "Mama's Market"}</Link> — Authentic World Flavours. All rights
             reserved.
           </div>
           <div className={styles.footerSocial}>

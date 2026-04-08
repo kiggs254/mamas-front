@@ -47,7 +47,7 @@ export default function RegisterPage() {
       <div className={styles.registerCard}>
         <div className={styles.header}>
           <h1 className={styles.title}>Create Account</h1>
-          <p className={styles.subtitle}>Join Cleanshelf and start shopping</p>
+          <p className={styles.subtitle}>Join Mama's Market and start shopping</p>
         </div>
 
         {error && (

@@ -27,7 +27,7 @@ export default async function Header() {
 
   const categoryTree = normalizeStorefrontCategoryTree(catData?.categories || []);
   const categoriesFlat = flattenCategoryTree(categoryTree);
-  const phone = settingsData?.settings?.shop_phone || "0117 262 933";
+  const phone = settingsData?.settings?.shop_phone || "044 730 9126";
 
   const firstName = customer
     ? [customer.first_name, customer.last_name].filter(Boolean).join(" ").trim() || "Account"
@@ -85,7 +85,7 @@ export default async function Header() {
             />
           </div>
           <Link href="/" className={styles.logo}>
-            <img src="/images/logo.png" alt="Cleanshelf Supermarket" className={styles.logoImage} />
+            <img src="/images/logo.png" alt="Mama's Market" className={styles.logoImage} />
           </Link>
           <HeaderSearch categories={categoriesFlat} className={styles.headerSearchSlot} />
           <div className={styles.headerActions}>
