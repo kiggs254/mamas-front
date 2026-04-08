@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import type { StorefrontCategory } from "@/types/api";
-import { MenuIcon, UserIcon, HeartIcon, PackageIcon, PhoneIcon, LocationIcon, ChevronDownIcon } from "./Icons";
-import { headerLocationLabel, readSelectedBranch } from "@/lib/branch-selection";
+import { MenuIcon, UserIcon, HeartIcon, PackageIcon, PhoneIcon, ChevronDownIcon } from "./Icons";
 import styles from "./MobileMenu.module.css";
 
 type Props = {
@@ -92,22 +91,6 @@ function MobileCategoryBranch({
   );
 }
 
-function MobileMenuStorePicker({ onPick }: { onPick: () => void }) {
-  const [label, setLabel] = useState(() => headerLocationLabel(readSelectedBranch()));
-
-  useEffect(() => {
-    const sync = () => setLabel(headerLocationLabel(readSelectedBranch()));
-    window.addEventListener("locationChange", sync);
-    return () => window.removeEventListener("locationChange", sync);
-  }, []);
-
-  return (
-    <button type="button" className={styles.storePickerBtn} onClick={onPick}>
-      <LocationIcon size={20} color="var(--color-primary)" />
-      <span className={styles.storePickerLabel}>{label}</span>
-    </button>
-  );
-}
 
 export default function MobileMenu({ phone, signedIn, accountLabel, categories }: Props) {
   const [open, setOpen] = useState(false);
@@ -179,13 +162,6 @@ export default function MobileMenu({ phone, signedIn, accountLabel, categories }
         </div>
 
         <div className={styles.scroll}>
-          <MobileMenuStorePicker
-            onPick={() => {
-              close();
-              window.setTimeout(() => window.dispatchEvent(new Event("openLocationPicker")), 0);
-            }}
-          />
-          <div className={styles.divider} />
           <p className={styles.sectionLabel}>Shop</p>
           <Link href="/shop?on_sale=true" className={styles.navLink} prefetch={false} onClick={close}>
             <span>

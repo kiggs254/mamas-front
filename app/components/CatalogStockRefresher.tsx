@@ -30,13 +30,5 @@ export default function CatalogStockRefresher() {
     };
   }, [enabled, router]);
 
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "cleanshelf_branch") router.refresh();
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [router]);
-
   return null;
 }

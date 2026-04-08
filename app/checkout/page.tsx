@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,10 +9,8 @@ import styles from "./Checkout.module.css";
 import { ShieldIcon, ArrowRightIcon } from "../components/Icons";
 import { useCart } from "@/hooks/useCart";
 import { apiGet, apiPost } from "@/lib/api";
-import { readSelectedBranch, writeSelectedBranch, parseNumericBranchId } from "@/lib/branch-selection";
-import AddressAutocomplete, { type PlaceResolved } from "../components/AddressAutocomplete";
 import { productPrimaryImage } from "@/lib/products";
-import type { CartLine, StorefrontProduct, ProductVariant, StoreLocatorBranch, StoreLocatorConfig } from "@/types/api";
+import type { CartLine, StorefrontProduct, ProductVariant } from "@/types/api";
 
 // Kenya counties — matches the backend countries.ts data
 const KENYA_COUNTIES = [
@@ -72,15 +70,6 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [doneOrderId, setDoneOrderId] = useState<number | null>(null);
 
-  const [checkoutBranchId, setCheckoutBranchId] = useState<number | undefined>(undefined);
-  const [branchesEnabledShop, setBranchesEnabledShop] = useState(false);
-  const [deliveryLat, setDeliveryLat] = useState<number | null>(null);
-  const [deliveryLng, setDeliveryLng] = useState<number | null>(null);
-  const [distanceCheckoutConfig, setDistanceCheckoutConfig] = useState<{
-    enabled: boolean;
-    google_maps_api_key: string;
-  } | null>(null);
-
   type LoyaltyCfg = {
     enabled: boolean;
     points_per_currency_discount: number;
@@ -103,13 +92,6 @@ export default function CheckoutPage() {
   const [loyaltyErr, setLoyaltyErr] = useState("");
   const [loyaltyPortalReady, setLoyaltyPortalReady] = useState(false);
 
-  // Branch confirmation modal state
-  const [branchConfirmOpen, setBranchConfirmOpen] = useState(false);
-  const [branchList, setBranchList] = useState<StoreLocatorBranch[]>([]);
-  const [branchListLoading, setBranchListLoading] = useState(false);
-  const [selectedConfirmBranchId, setSelectedConfirmBranchId] = useState<string | null>(null);
-  const branchConfirmedRef = useRef(false);
-
   useEffect(() => {
     setLoyaltyPortalReady(true);
   }, []);
@@ -124,109 +106,20 @@ export default function CheckoutPage() {
   }, [loyaltyModalOpen]);
 
   useEffect(() => {
-    if (!branchConfirmOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [branchConfirmOpen]);
-
-  useEffect(() => {
     apiGet<{ config: LoyaltyCfg }>("/storefront/loyalty/config")
       .then((d) => setLoyaltyConfig(d.config))
       .catch(() => setLoyaltyConfig(null));
   }, []);
 
   useEffect(() => {
-    const syncBranch = () => {
-      const sel = readSelectedBranch();
-      setCheckoutBranchId(parseNumericBranchId(sel?.id));
-    };
-    syncBranch();
-    window.addEventListener("locationChange", syncBranch);
-    return () => window.removeEventListener("locationChange", syncBranch);
-  }, []);
-
-  useEffect(() => {
-    apiGet<{ settings: Record<string, string> }>("/storefront/settings")
-      .then((d) => {
-        const s = d?.settings;
-        setBranchesEnabledShop(s?.branches_enabled === "true");
-      })
-      .catch(() => {});
-  }, []);
-
-  // Fetch branches and show confirmation modal when branches are enabled
-  useEffect(() => {
-    if (!branchesEnabledShop) return;
-    if (branchConfirmedRef.current) return;
-    const alreadyConfirmed = typeof window !== "undefined" && sessionStorage.getItem("cleanshelf_branch_confirmed") === "1";
-    if (alreadyConfirmed) {
-      branchConfirmedRef.current = true;
-      return;
-    }
-    setBranchListLoading(true);
-    apiGet<StoreLocatorConfig>("/storefront/store-locator")
-      .then((config) => {
-        const stores = config.stores ?? [];
-        setBranchList(stores);
-        if (stores.length > 0) {
-          const current = readSelectedBranch();
-          setSelectedConfirmBranchId(current?.id ?? null);
-          setBranchConfirmOpen(true);
-        }
-      })
-      .catch(() => {
-        setBranchList([]);
-      })
-      .finally(() => setBranchListLoading(false));
-  }, [branchesEnabledShop]);
-
-  const confirmBranch = () => {
-    if (!selectedConfirmBranchId) return;
-    const branch = branchList.find((b) => b.id === selectedConfirmBranchId);
-    if (branch) {
-      writeSelectedBranch({ id: branch.id, name: branch.name, city: branch.city });
-      setCheckoutBranchId(parseNumericBranchId(branch.id));
-      window.dispatchEvent(new Event("locationChange"));
-    }
-    branchConfirmedRef.current = true;
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("cleanshelf_branch_confirmed", "1");
-    }
-    setBranchConfirmOpen(false);
-  };
-
-  const branchIdForApi = branchesEnabledShop && checkoutBranchId != null ? checkoutBranchId : undefined;
-
-  useEffect(() => {
-    if (!branchesEnabledShop || branchIdForApi == null) {
-      setDistanceCheckoutConfig(null);
-      return;
-    }
-    apiGet<{ config: { enabled: boolean; google_maps_api_key: string } }>(
-      `/storefront/checkout/distance-based-shipping-config?branch_id=${branchIdForApi}`
-    )
-      .then((d) => setDistanceCheckoutConfig(d.config ?? null))
-      .catch(() => setDistanceCheckoutConfig(null));
-  }, [branchesEnabledShop, branchIdForApi]);
-
-  const placesAutocompleteEnabled = Boolean(
-    distanceCheckoutConfig?.enabled && distanceCheckoutConfig.google_maps_api_key?.trim()
-  );
-  const mapsApiKey = distanceCheckoutConfig?.google_maps_api_key?.trim() ?? "";
-
-  useEffect(() => {
-    const q = branchIdForApi != null ? `?branch_id=${branchIdForApi}` : "";
-    apiGet<{ gateways: Gateway[] }>(`/storefront/checkout/payment-gateways${q}`)
+    apiGet<{ gateways: Gateway[] }>("/storefront/checkout/payment-gateways")
       .then((d) => {
         const g = d.gateways || [];
         setGateways(g);
         if (g[0]?.name) setPaymentMethod(g[0].name);
       })
       .catch(() => {});
-  }, [branchIdForApi]);
+  }, []);
 
   const cartPayload = useMemo(
     () =>
@@ -297,29 +190,17 @@ export default function CheckoutPage() {
   }, [redemptionToken, loyaltyPointsToRedeem, loyaltyConfig]);
   const total = Math.max(0, subtotal + shipCost - couponDiscount - loyaltyDiscountAmount);
 
-  const onDeliveryPlaceResolved = useCallback((p: PlaceResolved) => {
-    setAddress1(p.address1);
-    if (p.city) setCity(p.city);
-    setCounty(p.county);
-    setDeliveryLat(p.lat);
-    setDeliveryLng(p.lng);
-  }, []);
-
   const refreshShipping = useCallback(async () => {
     if (cartPayload.length === 0) return;
     setCalcBusy(true);
     setError("");
     try {
-      const latOk = deliveryLat != null && Number.isFinite(deliveryLat);
-      const lngOk = deliveryLng != null && Number.isFinite(deliveryLng);
       const res = await apiPost<{ methods: ShipMethod[] }>("/storefront/checkout/calculate-shipping", {
         country: "Kenya",
         state: county,
         city: city || county,
         address: address1,
         items: cartPayload,
-        ...(branchIdForApi != null ? { branch_id: branchIdForApi } : {}),
-        ...(latOk && lngOk ? { latitude: deliveryLat, longitude: deliveryLng } : {}),
       });
       const methods = res.methods || [];
       setShipMethods(methods);
@@ -331,7 +212,7 @@ export default function CheckoutPage() {
     } finally {
       setCalcBusy(false);
     }
-  }, [county, city, address1, cartPayload, branchIdForApi, deliveryLat, deliveryLng]);
+  }, [county, city, address1, cartPayload]);
 
   useEffect(() => {
     if (cartPayload.length === 0) return;
@@ -339,7 +220,7 @@ export default function CheckoutPage() {
       refreshShipping();
     }, 420);
     return () => window.clearTimeout(t);
-  }, [county, city, address1, branchIdForApi, deliveryLat, deliveryLng, cartPayload.length, refreshShipping]);
+  }, [county, city, address1, cartPayload.length, refreshShipping]);
 
   const validateCoupon = async () => {
     setCouponError("");
@@ -433,22 +314,8 @@ export default function CheckoutPage() {
     }
 
     const shipping_method_id = /^\d+$/.test(selectedShipKey) ? Number(selectedShipKey) : selectedShipKey;
-    if (
-      String(shipping_method_id) === "distance-based-shipping" &&
-      (deliveryLat == null ||
-        deliveryLng == null ||
-        !Number.isFinite(deliveryLat) ||
-        !Number.isFinite(deliveryLng))
-    ) {
-      setError("Choose your street address from the suggestions so we can calculate distance-based delivery.");
-      return;
-    }
-
     setBusy(true);
     try {
-      const latOk = deliveryLat != null && Number.isFinite(deliveryLat);
-      const lngOk = deliveryLng != null && Number.isFinite(deliveryLng);
-
       const orderRes = await apiPost<{ order: { id: number; order_number?: string } }>(
         "/storefront/checkout/create-order",
         {
@@ -461,14 +328,12 @@ export default function CheckoutPage() {
             city: city || county,
             state: county,
             country: "Kenya",
-            ...(latOk && lngOk ? { latitude: deliveryLat, longitude: deliveryLng } : {}),
           },
           billing_address: { same_as_shipping: true },
           items: cartPayload,
           shipping_method_id,
           payment_method: paymentMethod,
           coupon_code: coupon.trim() || undefined,
-          ...(branchIdForApi != null ? { branch_id: branchIdForApi } : {}),
           ...(redemptionToken && loyaltyPointsToRedeem > 0
             ? {
                 loyalty_redemption: {
@@ -615,19 +480,11 @@ export default function CheckoutPage() {
                   <div className={styles.formGrid}>
                     <div className={`${styles.inputGroup} ${styles.spanFull}`}>
                       <label>Street Address *</label>
-                      <AddressAutocomplete
-                        apiKey={mapsApiKey}
-                        enabled={placesAutocompleteEnabled}
-                        value={address1}
-                        onChange={(v) => {
-                          setAddress1(v);
-                          setDeliveryLat(null);
-                          setDeliveryLng(null);
-                        }}
-                        onPlaceResolved={onDeliveryPlaceResolved}
-                        countyOptions={KENYA_COUNTIES}
+                      <input
                         className={styles.input}
-                        placeholder={placesAutocompleteEnabled ? "Start typing; pick an address from suggestions" : "e.g. 123 Uhuru Highway"}
+                        value={address1}
+                        onChange={(e) => setAddress1(e.target.value)}
+                        placeholder="e.g. 123 Main Street"
                       />
                     </div>
                     <div className={`${styles.inputGroup} ${styles.spanFull}`}>
@@ -868,70 +725,6 @@ export default function CheckoutPage() {
       <footer className={styles.footer}>
         <p>© {new Date().getFullYear()} Mama's Market. All rights reserved. Secured by SSL.</p>
       </footer>
-
-      {loyaltyPortalReady &&
-        branchConfirmOpen &&
-        createPortal(
-          <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-labelledby="branch-confirm-modal-title">
-            <div className={styles.modalCard}>
-              <h3 className={styles.modalTitle} id="branch-confirm-modal-title">
-                Confirm Your Branch
-              </h3>
-              <p className={styles.modalText}>
-                Please confirm which branch you&apos;d like to check out from:
-              </p>
-              {branchListLoading ? (
-                <p className={styles.modalText} style={{ textAlign: "center" }}>Loading branches…</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 280, overflowY: "auto", marginBottom: 16 }}>
-                  {branchList.map((branch) => (
-                    <button
-                      key={branch.id}
-                      type="button"
-                      onClick={() => setSelectedConfirmBranchId(branch.id)}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        padding: "12px 14px",
-                        borderRadius: 8,
-                        border: selectedConfirmBranchId === branch.id
-                          ? "2px solid var(--color-primary, #2563eb)"
-                          : "1px solid var(--color-border, #e2e8f0)",
-                        background: selectedConfirmBranchId === branch.id
-                          ? "var(--color-primary-bg, #eff6ff)"
-                          : "#fff",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        transition: "border-color 0.15s, background 0.15s",
-                      }}
-                    >
-                      <span style={{ fontWeight: 600, fontSize: 14, color: "var(--color-heading, #1e293b)" }}>
-                        {branch.name}
-                      </span>
-                      {(branch.address || branch.city) && (
-                        <span style={{ display: "block", fontSize: 13, color: "var(--color-text-light, #64748b)", marginTop: 2 }}>
-                          {[branch.address, branch.city].filter(Boolean).join(" · ")}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className={styles.modalActions}>
-                <button
-                  type="button"
-                  className={styles.submitBtn}
-                  disabled={!selectedConfirmBranchId}
-                  onClick={confirmBranch}
-                  style={{ opacity: selectedConfirmBranchId ? 1 : 0.5 }}
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
 
       {loyaltyPortalReady &&
         loyaltyModalOpen &&

@@ -1,7 +1,6 @@
 import { fetchStorefrontProducts, fetchStorefrontProductsWithFallback } from "@/lib/homepage-products";
 import { serverApiGet } from "@/lib/server-api";
 import type { StorefrontProduct } from "@/types/api";
-import { getStorefrontBranchIdCookie } from "@/lib/branch-cookie-server";
 
 function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
   const qs = new URLSearchParams();
@@ -21,13 +20,10 @@ export async function fetchProductsForHomepageSection(
   const limit = typeof c.limit === "number" && c.limit > 0 ? Math.min(c.limit, 48) : 12;
   const source = String(c.source || "manual");
 
-  const branchId = await getStorefrontBranchIdCookie();
-
   if (source === "manual") {
     const ids = Array.isArray(c.product_ids) ? c.product_ids.map((x) => Number(x)).filter((n) => n > 0) : [];
     if (ids.length === 0) return [];
     const manualParams: Record<string, string | number> = { ids: ids.join(",") };
-    if (branchId != null) manualParams.branch_id = branchId;
     const q = buildQuery(manualParams);
     const data = await serverApiGet<{ products: StorefrontProduct[] }>(`/storefront/products/by-ids${q}`);
     const list = data?.products ?? [];
