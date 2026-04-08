@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,10 +9,10 @@ import styles from "./Checkout.module.css";
 import { ShieldIcon, ArrowRightIcon } from "../components/Icons";
 import { useCart } from "@/hooks/useCart";
 import { apiGet, apiPost } from "@/lib/api";
-import { readSelectedBranch, parseNumericBranchId } from "@/lib/branch-selection";
+import { readSelectedBranch, writeSelectedBranch, parseNumericBranchId } from "@/lib/branch-selection";
 import AddressAutocomplete, { type PlaceResolved } from "../components/AddressAutocomplete";
 import { productPrimaryImage } from "@/lib/products";
-import type { CartLine, StorefrontProduct, ProductVariant } from "@/types/api";
+import type { CartLine, StorefrontProduct, ProductVariant, StoreLocatorBranch, StoreLocatorConfig } from "@/types/api";
 
 // Kenya counties — matches the backend countries.ts data
 const KENYA_COUNTIES = [
@@ -103,6 +103,13 @@ export default function CheckoutPage() {
   const [loyaltyErr, setLoyaltyErr] = useState("");
   const [loyaltyPortalReady, setLoyaltyPortalReady] = useState(false);
 
+  // Branch confirmation modal state
+  const [branchConfirmOpen, setBranchConfirmOpen] = useState(false);
+  const [branchList, setBranchList] = useState<StoreLocatorBranch[]>([]);
+  const [branchListLoading, setBranchListLoading] = useState(false);
+  const [selectedConfirmBranchId, setSelectedConfirmBranchId] = useState<string | null>(null);
+  const branchConfirmedRef = useRef(false);
+
   useEffect(() => {
     setLoyaltyPortalReady(true);
   }, []);
@@ -115,6 +122,15 @@ export default function CheckoutPage() {
       document.body.style.overflow = prev;
     };
   }, [loyaltyModalOpen]);
+
+  useEffect(() => {
+    if (!branchConfirmOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [branchConfirmOpen]);
 
   useEffect(() => {
     apiGet<{ config: LoyaltyCfg }>("/storefront/loyalty/config")
@@ -140,6 +156,47 @@ export default function CheckoutPage() {
       })
       .catch(() => {});
   }, []);
+
+  // Fetch branches and show confirmation modal when branches are enabled
+  useEffect(() => {
+    if (!branchesEnabledShop) return;
+    if (branchConfirmedRef.current) return;
+    const alreadyConfirmed = typeof window !== "undefined" && sessionStorage.getItem("cleanshelf_branch_confirmed") === "1";
+    if (alreadyConfirmed) {
+      branchConfirmedRef.current = true;
+      return;
+    }
+    setBranchListLoading(true);
+    apiGet<StoreLocatorConfig>("/storefront/store-locator")
+      .then((config) => {
+        const stores = config.stores ?? [];
+        setBranchList(stores);
+        if (stores.length > 0) {
+          const current = readSelectedBranch();
+          setSelectedConfirmBranchId(current?.id ?? null);
+          setBranchConfirmOpen(true);
+        }
+      })
+      .catch(() => {
+        setBranchList([]);
+      })
+      .finally(() => setBranchListLoading(false));
+  }, [branchesEnabledShop]);
+
+  const confirmBranch = () => {
+    if (!selectedConfirmBranchId) return;
+    const branch = branchList.find((b) => b.id === selectedConfirmBranchId);
+    if (branch) {
+      writeSelectedBranch({ id: branch.id, name: branch.name, city: branch.city });
+      setCheckoutBranchId(parseNumericBranchId(branch.id));
+      window.dispatchEvent(new Event("locationChange"));
+    }
+    branchConfirmedRef.current = true;
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("cleanshelf_branch_confirmed", "1");
+    }
+    setBranchConfirmOpen(false);
+  };
 
   const branchIdForApi = branchesEnabledShop && checkoutBranchId != null ? checkoutBranchId : undefined;
 
@@ -811,6 +868,70 @@ export default function CheckoutPage() {
       <footer className={styles.footer}>
         <p>© {new Date().getFullYear()} Cleanshelf Supermarket. All rights reserved. Secured by SSL.</p>
       </footer>
+
+      {loyaltyPortalReady &&
+        branchConfirmOpen &&
+        createPortal(
+          <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-labelledby="branch-confirm-modal-title">
+            <div className={styles.modalCard}>
+              <h3 className={styles.modalTitle} id="branch-confirm-modal-title">
+                Confirm Your Branch
+              </h3>
+              <p className={styles.modalText}>
+                Please confirm which branch you&apos;d like to check out from:
+              </p>
+              {branchListLoading ? (
+                <p className={styles.modalText} style={{ textAlign: "center" }}>Loading branches…</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 280, overflowY: "auto", marginBottom: 16 }}>
+                  {branchList.map((branch) => (
+                    <button
+                      key={branch.id}
+                      type="button"
+                      onClick={() => setSelectedConfirmBranchId(branch.id)}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "12px 14px",
+                        borderRadius: 8,
+                        border: selectedConfirmBranchId === branch.id
+                          ? "2px solid var(--color-primary, #2563eb)"
+                          : "1px solid var(--color-border, #e2e8f0)",
+                        background: selectedConfirmBranchId === branch.id
+                          ? "var(--color-primary-bg, #eff6ff)"
+                          : "#fff",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "border-color 0.15s, background 0.15s",
+                      }}
+                    >
+                      <span style={{ fontWeight: 600, fontSize: 14, color: "var(--color-heading, #1e293b)" }}>
+                        {branch.name}
+                      </span>
+                      {(branch.address || branch.city) && (
+                        <span style={{ display: "block", fontSize: 13, color: "var(--color-text-light, #64748b)", marginTop: 2 }}>
+                          {[branch.address, branch.city].filter(Boolean).join(" · ")}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.submitBtn}
+                  disabled={!selectedConfirmBranchId}
+                  onClick={confirmBranch}
+                  style={{ opacity: selectedConfirmBranchId ? 1 : 0.5 }}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {loyaltyPortalReady &&
         loyaltyModalOpen &&
