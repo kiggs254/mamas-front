@@ -33,7 +33,7 @@ export default async function Footer() {
         <div className={styles.ctaContent}>
           <h2>Stay home & get your daily needs from our shop</h2>
           <p>Start Your Daily Shopping with {settings.shop_name || "Mama's Market"}</p>
-          <form action="#" method="post" className={styles.ctaSearch} onSubmit={(e) => e.preventDefault()}>
+          <form action="/api/subscribe" method="post" className={styles.ctaSearch}>
             <input type="email" name="email" placeholder="Enter your email address…" />
             <button type="submit">
               Subscribe <ArrowRightIcon size={14} color="white" />
