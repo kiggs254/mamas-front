@@ -191,9 +191,6 @@ export default function MobileMenu({ phone, signedIn, accountLabel, categories }
           <Link href="/faqs" className={styles.navLink} prefetch={false} onClick={close}>
             FAQs
           </Link>
-          <Link href="/store-locator" className={styles.navLink} prefetch={false} onClick={close}>
-            Stores
-          </Link>
 
           {categories.length > 0 ? (
             <>

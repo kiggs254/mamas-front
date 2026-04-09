@@ -86,9 +86,6 @@ export default async function Footer() {
               <li>
                 <Link href="/faqs">FAQs</Link>
               </li>
-              <li>
-                <Link href="/store-locator">Store locator</Link>
-              </li>
             </ul>
           </div>
 

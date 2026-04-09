@@ -142,9 +142,6 @@ export default async function Header() {
             <Link href="/faqs" className={styles.navLink} prefetch={false}>
               FAQs
             </Link>
-            <Link href="/store-locator" className={styles.navLink} prefetch={false}>
-              Stores
-            </Link>
           </nav>
           <div className={styles.headerPhone}>
             <span className={styles.phoneIcon}>
