@@ -2,7 +2,6 @@ import { serverApiGet } from "@/lib/server-api";
 import type { Banner, ShopSettings } from "@/types/api";
 import { resolveMediaUrl } from "@/lib/api-config";
 import styles from "./HeroBanner.module.css";
-import HeroLiveSearch from "./HeroLiveSearch";
 import HeroBannerSlideshow from "./HeroBannerSlideshow";
 
 export default async function HeroBanner() {
@@ -35,7 +34,6 @@ export default async function HeroBanner() {
           Shop more for less
         </h1>
         <p>{tagline}</p>
-        <HeroLiveSearch />
       </div>
     </section>
   );

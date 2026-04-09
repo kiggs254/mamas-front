@@ -33,10 +33,10 @@ export default async function Footer() {
         <div className={styles.ctaContent}>
           <h2>Stay home & get your daily needs from our shop</h2>
           <p>Start Your Daily Shopping with {settings.shop_name || "Mama's Market"}</p>
-          <form action="/shop" method="get" className={styles.ctaSearch}>
-            <input type="email" name="q" placeholder="Search products…" />
+          <form action="#" method="post" className={styles.ctaSearch} onSubmit={(e) => e.preventDefault()}>
+            <input type="email" name="email" placeholder="Enter your email address…" />
             <button type="submit">
-              Shop <ArrowRightIcon size={14} color="white" />
+              Subscribe <ArrowRightIcon size={14} color="white" />
             </button>
           </form>
         </div>
