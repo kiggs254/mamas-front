@@ -24,7 +24,17 @@ function LoginForm() {
     setError("");
 
     try {
-      await apiPost("/storefront/auth/login", { email, password });
+      // Use the local API route handler (not the rewrite) so Set-Cookie is forwarded
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.status !== "success") {
+        throw new Error(json.message || "Invalid email or password");
+      }
       try {
         await apiPost("/storefront/cart/merge", {});
       } catch {

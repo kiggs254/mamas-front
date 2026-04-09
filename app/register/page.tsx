@@ -26,12 +26,17 @@ export default function RegisterPage() {
     const last_name = parts.slice(1).join(" ") || undefined;
 
     try {
-      await apiPost("/storefront/auth/register", {
-        email,
-        password,
-        first_name,
-        last_name,
+      // Use the local API route handler (not the rewrite) so Set-Cookie is forwarded
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password, first_name, last_name }),
       });
+      const json = await res.json();
+      if (!res.ok || json.status !== "success") {
+        throw new Error(json.message || "Registration failed");
+      }
       router.push("/account");
       router.refresh();
     } catch (err: unknown) {

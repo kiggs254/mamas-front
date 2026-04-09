@@ -34,7 +34,7 @@ export default function SidebarNav({ firstName, lastName, email }: Props) {
 
   const logout = async () => {
     try {
-      await apiPost("/storefront/auth/logout", {});
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     } catch {
       /* still redirect */
     }
