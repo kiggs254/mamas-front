@@ -3,22 +3,22 @@
 /* Light UI only: ignore system dark preference for scrollbars, form controls, and Next.js fallbacks */
 :root {
   color-scheme: light;
-  --color-primary: #1A8C3A;
-  --color-primary-dark: #14722E;
-  --color-primary-light: #E0F5E5;
-  --color-accent: #E31E24;
+  --color-primary: #E8751A;
+  --color-primary-dark: #C9620F;
+  --color-primary-light: #FEF0E5;
+  --color-accent: #2D8C3A;
   --color-secondary: #FDC040;
-  --color-heading: #253D4E;
-  --color-text: #7E7E7E;
+  --color-heading: #3B2F20;
+  --color-text: #6B6B6B;
   --color-text-light: #ADADAD;
   --color-border: #ECECEC;
   --color-bg: #FFFFFF;
-  --color-bg-light: #F4F6FA;
-  --color-bg-green: #B8E0C4;
-  --color-danger: #E31E24;
-  --color-badge-hot: #E31E24;
-  --color-badge-sale: #1A8C3A;
-  --color-badge-new: #67BCEE;
+  --color-bg-light: #FFF9F4;
+  --color-bg-green: #E8D5C0;
+  --color-danger: #D43B2F;
+  --color-badge-hot: #D43B2F;
+  --color-badge-sale: #E8751A;
+  --color-badge-new: #2D8C3A;
   --font-primary: 'Quicksand', sans-serif;
   --font-secondary: 'Lato', sans-serif;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
