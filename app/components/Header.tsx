@@ -64,7 +64,7 @@ export default async function Header() {
               <option>English</option>
             </select>
             <select disabled title="From store settings">
-              <option>{settingsData?.settings?.currency || "KES"}</option>
+              <option>{settingsData?.settings?.currency || "EUR"}</option>
             </select>
           </div>
         </div>

@@ -70,7 +70,7 @@ export default function OrdersClient({
                       {order.status || "pending"}
                     </span>
                     <p className={styles.orderTotal}>
-                      {order.currency || "KES"} {order.total != null ? Number(order.total).toFixed(2) : "—"}
+                      {order.currency || "EUR"} {order.total != null ? Number(order.total).toFixed(2) : "—"}
                     </p>
                   </div>
                 </div>

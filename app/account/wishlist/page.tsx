@@ -5,9 +5,11 @@ import { resolveMediaUrl } from "@/lib/api-config";
 import type { StorefrontProduct } from "@/types/api";
 import { productEffectivePrice, productHref } from "@/lib/products";
 import WishlistItemActions from "./WishlistItemActions";
+import { getCurrency } from "@/lib/currency";
 import styles from "./wishlist.module.css";
 
 export default async function WishlistPage() {
+  const cc = await getCurrency();
   const data = await serverApiGet<{ items: { id: number; product_id: number; product?: StorefrontProduct }[] }>(
     "/storefront/wishlist"
   );
@@ -56,9 +58,9 @@ export default async function WishlistPage() {
                   </Link>
                   {p.category && <p className={styles.category}>{p.category.name}</p>}
                   <div className={styles.priceRow}>
-                    <span className={styles.price}>KES {price.toFixed(2)}</span>
+                    <span className={styles.price}>{cc} {price.toFixed(2)}</span>
                     {oldPrice != null && (
-                      <span className={styles.oldPrice}>KES {oldPrice.toFixed(2)}</span>
+                      <span className={styles.oldPrice}>{cc} {oldPrice.toFixed(2)}</span>
                     )}
                   </div>
                   <WishlistItemActions

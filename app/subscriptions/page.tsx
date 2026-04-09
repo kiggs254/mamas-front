@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { serverApiGet } from "@/lib/server-api";
+import { getCurrency } from "@/lib/currency";
 import type { SubscriptionPackage } from "@/types/api";
 import shell from "../styles/shell.module.css";
 import styles from "./subscriptions.module.css";
 
 export default async function SubscriptionsPage() {
-  const data = await serverApiGet<{ packages: SubscriptionPackage[] }>("/storefront/subscription-packages");
+  const [data, cc] = await Promise.all([
+    serverApiGet<{ packages: SubscriptionPackage[] }>("/storefront/subscription-packages"),
+    getCurrency(),
+  ]);
   const packages = data?.packages || [];
 
   return (
@@ -34,9 +38,9 @@ export default async function SubscriptionsPage() {
               <h2>{pkg.name}</h2>
               <p className={styles.price}>
                 {pkg.weekly_price != null
-                  ? `From KES ${Number(pkg.weekly_price).toFixed(2)} / week`
+                  ? `From ${cc} ${Number(pkg.weekly_price).toFixed(2)} / week`
                   : pkg.price != null
-                    ? `KES ${Number(pkg.price).toFixed(2)}`
+                    ? `${cc} ${Number(pkg.price).toFixed(2)}`
                     : "See checkout for pricing"}
               </p>
               <Link href={`/subscriptions/signup?package_id=${pkg.id}`} className={styles.cta} prefetch={false}>

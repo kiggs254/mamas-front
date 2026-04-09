@@ -108,7 +108,7 @@ export default async function AccountDashboard() {
                     {order.status || "pending"}
                   </span>
                   <span className={styles.recentTotal}>
-                    {order.currency || "KES"} {order.total != null ? Number(order.total).toFixed(2) : "—"}
+                    {order.currency || "EUR"} {order.total != null ? Number(order.total).toFixed(2) : "—"}
                   </span>
                 </div>
               </Link>

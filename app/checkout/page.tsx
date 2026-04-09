@@ -10,6 +10,7 @@ import { ShieldIcon, ArrowRightIcon } from "../components/Icons";
 import { useCart } from "@/hooks/useCart";
 import { apiGet, apiPost } from "@/lib/api";
 import { productPrimaryImage } from "@/lib/products";
+import { useCurrency } from "../components/CurrencyContext";
 import type { CartLine, StorefrontProduct, ProductVariant } from "@/types/api";
 
 // Kenya counties — matches the backend countries.ts data
@@ -43,6 +44,7 @@ function lineUnitPrice(line: CartLine): number {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const cc = useCurrency();
   const { data: cartData, mutate } = useCart();
   const items = cartData?.items || [];
 
@@ -175,7 +177,7 @@ export default function CheckoutPage() {
         phone: phone || undefined,
         cart_items: cartPayload,
         total_amount: subtotal,
-        currency: "KES",
+        currency: cc,
       }).catch(() => {});
     }, 2500);
     return () => window.clearTimeout(t);
@@ -541,7 +543,7 @@ export default function CheckoutPage() {
                               />
                               <span className={styles.shipMethodName}>{m.name}</span>
                               <span className={styles.shipMethodCost}>
-                                {Number(m.cost || 0) === 0 ? "Free" : `KES ${Number(m.cost).toFixed(2)}`}
+                                {Number(m.cost || 0) === 0 ? "Free" : `${cc} ${Number(m.cost).toFixed(2)}`}
                               </span>
                             </label>
                           ))}
@@ -572,7 +574,7 @@ export default function CheckoutPage() {
                   </div>
                   {couponError && <p className={styles.couponError}>{couponError}</p>}
                   {discountPreview != null && discountPreview > 0 && (
-                    <p className={styles.couponSuccess}>Discount: KES {discountPreview.toFixed(2)}</p>
+                    <p className={styles.couponSuccess}>Discount: {cc} {discountPreview.toFixed(2)}</p>
                   )}
                 </div>
 
@@ -642,7 +644,7 @@ export default function CheckoutPage() {
                       ) : (
                         <div style={{ fontSize: 14 }}>
                           <span>
-                            {loyaltyPointsToRedeem} pts (−KES {loyaltyDiscountAmount.toFixed(2)})
+                            {loyaltyPointsToRedeem} pts (−{cc} {loyaltyDiscountAmount.toFixed(2)})
                           </span>
                           <button
                             type="button"
@@ -674,7 +676,7 @@ export default function CheckoutPage() {
                             <div className={styles.itemName}>{p?.name || "Item"}</div>
                             <div className={styles.itemQty}>Qty: {line.quantity}</div>
                           </div>
-                          <div className={styles.itemPrice}>KES {(unit * line.quantity).toFixed(2)}</div>
+                          <div className={styles.itemPrice}>{cc} {(unit * line.quantity).toFixed(2)}</div>
                         </div>
                       );
                     })}
@@ -682,7 +684,7 @@ export default function CheckoutPage() {
                   <div className={styles.totals}>
                     <div className={styles.totalRow}>
                       <span>Subtotal</span>
-                      <span>KES {subtotal.toFixed(2)}</span>
+                      <span>{cc} {subtotal.toFixed(2)}</span>
                     </div>
                     <div className={styles.totalRow}>
                       <span>Shipping</span>
@@ -690,20 +692,20 @@ export default function CheckoutPage() {
                         {calcBusy ? (
                           <span className={styles.calcingText}>Calculating…</span>
                         ) : (
-                          `KES ${shipCost.toFixed(2)}`
+                          `${cc} ${shipCost.toFixed(2)}`
                         )}
                       </span>
                     </div>
                     {couponDiscount > 0 && (
                       <div className={styles.totalRow}>
                         <span>Coupon</span>
-                        <span className={styles.discountAmt}>-KES {couponDiscount.toFixed(2)}</span>
+                        <span className={styles.discountAmt}>-{cc} {couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
                     {loyaltyDiscountAmount > 0 && (
                       <div className={styles.totalRow}>
                         <span>Loyalty</span>
-                        <span className={styles.discountAmt}>-KES {loyaltyDiscountAmount.toFixed(2)}</span>
+                        <span className={styles.discountAmt}>-{cc} {loyaltyDiscountAmount.toFixed(2)}</span>
                       </div>
                     )}
                     <div className={styles.totalRow}>
@@ -712,7 +714,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className={`${styles.totalRow} ${styles.grandTotal}`}>
                       <span>Total</span>
-                      <span className={styles.grandTotalAmount}>KES {total.toFixed(2)}</span>
+                      <span className={styles.grandTotalAmount}>{cc} {total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -834,7 +836,7 @@ export default function CheckoutPage() {
                       style={{ width: "100%" }}
                     />
                     <p className={styles.modalText}>
-                      {loyaltyPointsToRedeem} pts · ~KES{" "}
+                      {loyaltyPointsToRedeem} pts · ~{cc}{" "}
                       {(
                         loyaltyPointsToRedeem / (loyaltyConfig?.points_per_currency_discount || 100)
                       ).toFixed(2)}{" "}

@@ -8,6 +8,7 @@ import {
 } from "@/lib/homepage-products";
 import styles from "./ProductLists.module.css";
 import { StarIcon } from "./Icons";
+import { getCurrency } from "@/lib/currency";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -19,7 +20,7 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function ProductColumn({ title, products }: { title: string; products: StorefrontProduct[] }) {
+function ProductColumn({ title, products, cc }: { title: string; products: StorefrontProduct[]; cc: string }) {
   return (
     <div className={styles.column}>
       <h3>{title}</h3>
@@ -44,9 +45,9 @@ function ProductColumn({ title, products }: { title: string; products: Storefron
                 <div className={styles.miniName}>{product.name}</div>
                 <StarRating rating={rating} />
                 <div>
-                  <span className={styles.miniPrice}>KES {price.toFixed(2)}</span>
+                  <span className={styles.miniPrice}>{cc} {price.toFixed(2)}</span>
                   {oldPrice != null && (
-                    <span className={styles.miniOldPrice}>KES {oldPrice.toFixed(2)}</span>
+                    <span className={styles.miniOldPrice}>{cc} {oldPrice.toFixed(2)}</span>
                   )}
                 </div>
               </div>
@@ -59,6 +60,7 @@ function ProductColumn({ title, products }: { title: string; products: Storefron
 }
 
 export default async function ProductLists() {
+  const cc = await getCurrency();
   const [topSelling, trending, recent, topRated] = await Promise.all([
     fetchStorefrontProductsWithFallback({ sort: "best_sellers", limit: 5 }, [{ sort: "newest", limit: 5 }]),
     fetchStorefrontProductsWithFallback({ featured: true, limit: 5 }, [{ sort: "newest", limit: 5 }]),
@@ -69,10 +71,10 @@ export default async function ProductLists() {
   return (
     <section className={styles.section}>
       <div className={styles.grid}>
-        <ProductColumn title="Top Selling" products={topSelling} />
-        <ProductColumn title="Trending (new)" products={trending} />
-        <ProductColumn title="Recently Added" products={recent} />
-        <ProductColumn title="Premium picks" products={topRated} />
+        <ProductColumn title="Top Selling" products={topSelling} cc={cc} />
+        <ProductColumn title="Trending (new)" products={trending} cc={cc} />
+        <ProductColumn title="Recently Added" products={recent} cc={cc} />
+        <ProductColumn title="Premium picks" products={topRated} cc={cc} />
       </div>
     </section>
   );

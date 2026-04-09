@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import CatalogStockRefresher from "./components/CatalogStockRefresher";
 import { serverApiGet } from "@/lib/server-api";
+import { getCurrency } from "@/lib/currency";
 
 export const metadata: Metadata = {
   title: "Mama's Market - Authentic World Flavours in Vaasa",
@@ -17,7 +18,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const scriptsData = await serverApiGet<{ scripts: Record<string, string> }>("/storefront/custom-scripts");
+  const [scriptsData, currency] = await Promise.all([
+    serverApiGet<{ scripts: Record<string, string> }>("/storefront/custom-scripts"),
+    getCurrency(),
+  ]);
   const scripts = scriptsData?.scripts || {};
 
   return (
@@ -32,7 +36,7 @@ export default async function RootLayout({
         {scripts.custom_scripts_body_start ? (
           <div dangerouslySetInnerHTML={{ __html: scripts.custom_scripts_body_start }} />
         ) : null}
-        <LayoutWrapper header={<Header />} footer={<Footer />}>
+        <LayoutWrapper header={<Header />} footer={<Footer />} currency={currency}>
           {children}
         </LayoutWrapper>
         {scripts.custom_scripts_body_end ? (

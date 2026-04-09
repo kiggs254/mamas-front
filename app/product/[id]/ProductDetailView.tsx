@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { mutate } from "swr";
+import { useCurrency } from "@/app/components/CurrencyContext";
 import type { Review, StorefrontCategory, StorefrontProduct } from "@/types/api";
 import {
   productEffectivePrice,
@@ -118,6 +119,7 @@ export default function ProductDetailView({
   wishlistInitially,
   sidebarCategories,
 }: Props) {
+  const cc = useCurrency();
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"desc" | "reviews">("desc");
   const [reviewEmail, setReviewEmail] = useState("");
@@ -422,8 +424,8 @@ export default function ProductDetailView({
           </div>
 
           <div className={styles.priceRow}>
-            {onSale ? <span className={styles.oldPrice}>KES {oldPrice!.toFixed(2)}</span> : null}
-            <span className={styles.currentPrice}>KES {price.toFixed(2)}</span>
+            {onSale ? <span className={styles.oldPrice}>{cc} {oldPrice!.toFixed(2)}</span> : null}
+            <span className={styles.currentPrice}>{cc} {price.toFixed(2)}</span>
           </div>
 
           {variants.length > 0 && (
@@ -437,7 +439,7 @@ export default function ProductDetailView({
               >
                 {variants.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.sku || `Option ${v.id}`} — KES {Number(v.sale_price ?? v.price).toFixed(2)}
+                    {v.sku || `Option ${v.id}`} — {cc} {Number(v.sale_price ?? v.price).toFixed(2)}
                   </option>
                 ))}
               </select>

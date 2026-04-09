@@ -39,7 +39,7 @@ type OrderDetail = {
   shipping_address?: ShippingAddress | null;
 };
 
-function fmt(v?: string | number | null, currency = "KES") {
+function fmt(v?: string | number | null, currency = "EUR") {
   if (v == null) return "—";
   return `${currency} ${Number(v).toFixed(2)}`;
 }
@@ -63,7 +63,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   const order = data.order;
   const shopTimeZone = settingsData?.settings?.shop_timezone?.trim() || undefined;
-  const currency = order.currency || "KES";
+  const currency = order.currency || "EUR";
   const items = order.items || [];
   const addr = order.shipping_address;
 

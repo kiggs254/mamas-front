@@ -6,6 +6,7 @@ import Link from "next/link";
 import { StarIcon, CartIcon } from "./Icons";
 import AddToCartButton from "./AddToCartButton";
 import styles from "./DailyBestSells.module.css";
+import { useCurrency } from "./CurrencyContext";
 
 export type DailyProduct = {
   id: number;
@@ -41,6 +42,7 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function DailyBestSellsClient({ products, tabs }: Props) {
+  const cc = useCurrency();
   const [activeTab, setActiveTab] = useState(tabs[0] ?? "All");
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -121,9 +123,9 @@ export default function DailyBestSellsClient({ products, tabs }: Props) {
                   </div>
 
                   <div className={styles.dPriceRow}>
-                    <span className={styles.dPrice}>KES {p.price.toFixed(2)}</span>
+                    <span className={styles.dPrice}>{cc} {p.price.toFixed(2)}</span>
                     {p.oldPrice != null && (
-                      <span className={styles.dOldPrice}>KES {p.oldPrice.toFixed(2)}</span>
+                      <span className={styles.dOldPrice}>{cc} {p.oldPrice.toFixed(2)}</span>
                     )}
                   </div>
 

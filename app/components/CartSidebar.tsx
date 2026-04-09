@@ -8,10 +8,12 @@ import { MinusIcon, PlusIcon } from "./Icons";
 import { useCart } from "@/hooks/useCart";
 import { apiDelete, apiPut } from "@/lib/api";
 import { productPrimaryImage } from "@/lib/products";
+import { useCurrency } from "./CurrencyContext";
 import { cartLineUnitPrice, cartSubtotal } from "@/lib/cart";
 import type { CartLine, StorefrontProduct } from "@/types/api";
 
 export default function CartSidebar() {
+  const cc = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const { data, mutate, isLoading } = useCart();
   const items = data?.items || [];
@@ -71,7 +73,7 @@ export default function CartSidebar() {
                 </div>
                 <div className={styles.itemDetails}>
                   <div className={styles.itemName}>{name}</div>
-                  <div className={styles.itemPrice}>KES {(unit * line.quantity).toFixed(2)}</div>
+                  <div className={styles.itemPrice}>{cc} {(unit * line.quantity).toFixed(2)}</div>
                   <div className={styles.qtyRow}>
                     <div className={styles.qtyBox}>
                       <button
@@ -100,7 +102,7 @@ export default function CartSidebar() {
         <div className={styles.footer}>
           <div className={styles.summaryRow}>
             <span>Subtotal</span>
-            <span className={styles.totalAmount}>KES {totalAmount.toFixed(2)}</span>
+            <span className={styles.totalAmount}>{cc} {totalAmount.toFixed(2)}</span>
           </div>
           <div className={styles.actionBtns}>
             <Link href="/cart" className={`${styles.btn} ${styles.btnViewCart}`} onClick={() => setIsOpen(false)}>

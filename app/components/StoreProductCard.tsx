@@ -8,6 +8,7 @@ import AddToCartButton from "./AddToCartButton";
 import WishlistButton from "./WishlistButton";
 import { StarIcon } from "./Icons";
 import styles from "./StoreProductCard.module.css";
+import { useCurrency } from "./CurrencyContext";
 
 const COMPARE_KEY = "cleanshelf_compare_ids";
 
@@ -55,8 +56,9 @@ export default function StoreProductCard({
   ageRestricted = false,
   initialInWishlist,
   showWishlist = true,
-  currencyLabel = "KES",
+  currencyLabel,
 }: Props) {
+  const cc = currencyLabel || useCurrency();
   const onCompare = useCallback(() => {
     try {
       const raw = typeof window !== "undefined" ? window.localStorage.getItem(COMPARE_KEY) : null;
@@ -118,11 +120,11 @@ export default function StoreProductCard({
       <div className={styles.bottomRow}>
         <div className={styles.priceBlock}>
           <span className={styles.price}>
-            {currencyLabel} {price.toFixed(2)}
+            {cc} {price.toFixed(2)}
           </span>
           {oldPrice != null ? (
             <span className={styles.oldPrice}>
-              {currencyLabel} {oldPrice.toFixed(2)}
+              {cc} {oldPrice.toFixed(2)}
             </span>
           ) : null}
         </div>

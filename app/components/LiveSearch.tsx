@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SearchIcon } from "./Icons";
 import { apiGet } from "@/lib/api";
+import { useCurrency } from "./CurrencyContext";
 import styles from "./LiveSearch.module.css";
 
 type Result = {
@@ -42,6 +43,7 @@ function productImage(p: Result) {
 }
 
 export default function LiveSearch({ variant = "header", categories = [], className }: Props) {
+  const cc = useCurrency();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [categorySlug, setCategorySlug] = useState("");
@@ -175,7 +177,7 @@ export default function LiveSearch({ variant = "header", categories = [], classN
                     <span className={styles.name}>{p.name}</span>
                     {p.category?.name && <span className={styles.cat}>{p.category.name}</span>}
                   </span>
-                  <span className={styles.price}>KES {productPrice(p).toFixed(2)}</span>
+                  <span className={styles.price}>{cc} {productPrice(p).toFixed(2)}</span>
                 </Link>
               );
             })}

@@ -5,9 +5,10 @@ import styles from "./Header.module.css";
 import { CartIcon } from "./Icons";
 import { useCart } from "@/hooks/useCart";
 import { cartSubtotal } from "@/lib/cart";
+import { useCurrency } from "./CurrencyContext";
 
-function formatKes(amount: number): string {
-  return new Intl.NumberFormat("en-KE", {
+function formatAmount(amount: number): string {
+  return new Intl.NumberFormat("en", {
     style: "decimal",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
@@ -15,6 +16,7 @@ function formatKes(amount: number): string {
 }
 
 export default function HeaderCart() {
+  const cc = useCurrency();
   const { data } = useCart();
   const items = data?.items ?? [];
   const subtotal = useMemo(() => cartSubtotal(items), [items]);
@@ -39,7 +41,7 @@ export default function HeaderCart() {
       </span>
       <div className={styles.actionText}>
         <span className={styles.actionLabel}>Cart</span>
-        <span className={styles.actionValue}>KES {formatKes(subtotal)}</span>
+        <span className={styles.actionValue}>{cc} {formatAmount(subtotal)}</span>
       </div>
     </div>
   );
