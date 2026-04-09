@@ -12,12 +12,15 @@ function statusClass(status: string) {
 
 export default async function AccountDashboard() {
   const customer = await getCustomer();
-  const [ordersData, wishData, settingsData] = await Promise.all([
+  const [ordersData, wishData, settingsData, loyaltyData] = await Promise.all([
     serverApiGet<{ orders: OrderSummary[]; total: number }>("/storefront/customer/orders?limit=5"),
     serverApiGet<{ items: unknown[] }>("/storefront/wishlist"),
     serverApiGet<{ settings: Record<string, string> }>("/storefront/settings"),
+    serverApiGet<{ enabled: boolean; balance: number; points_per_currency_discount?: number }>("/storefront/customer/loyalty"),
   ]);
   const shopTimeZone = settingsData?.settings?.shop_timezone?.trim() || undefined;
+  const loyaltyEnabled = loyaltyData?.enabled ?? false;
+  const loyaltyBalance = loyaltyData?.balance ?? 0;
 
   const orderCount = ordersData?.total ?? 0;
   const recentOrders = ordersData?.orders || [];
@@ -69,15 +72,27 @@ export default async function AccountDashboard() {
           </div>
         </Link>
 
-        <Link href="/account/subscriptions" className={styles.statCard}>
-          <div className={styles.statIconWrap} data-color="amber">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        {loyaltyEnabled ? (
+          <div className={styles.statCard}>
+            <div className={styles.statIconWrap} data-color="amber">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div className={styles.statInfo}>
+              <p className={styles.statValue}>{loyaltyBalance.toLocaleString()}</p>
+              <p className={styles.statLabel}>Loyalty Points</p>
+            </div>
           </div>
-          <div className={styles.statInfo}>
-            <p className={styles.statValue}>24/7</p>
-            <p className={styles.statLabel}>Support</p>
-          </div>
-        </Link>
+        ) : (
+          <Link href="/account/subscriptions" className={styles.statCard}>
+            <div className={styles.statIconWrap} data-color="amber">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            </div>
+            <div className={styles.statInfo}>
+              <p className={styles.statValue}>24/7</p>
+              <p className={styles.statLabel}>Support</p>
+            </div>
+          </Link>
+        )}
       </div>
 
       <div className={styles.recentSection}>
