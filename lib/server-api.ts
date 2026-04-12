@@ -16,6 +16,8 @@ async function cookieHeader(): Promise<string> {
     .join("; ");
 }
 
+const SERVER_FETCH_TIMEOUT_MS = 10_000;
+
 export async function serverFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const url = joinPath(getInternalApiBase(), path);
   const headers = new Headers(init.headers);
@@ -24,11 +26,18 @@ export async function serverFetch(path: string, init: RequestInit = {}): Promise
   if (init.body && typeof init.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  return fetch(url, {
-    ...init,
-    headers,
-    cache: "no-store",
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SERVER_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, {
+      ...init,
+      headers,
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function serverApiGet<T>(path: string): Promise<T | null> {
