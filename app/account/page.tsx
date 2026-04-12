@@ -4,6 +4,7 @@ import { serverApiGet } from "@/lib/server-api";
 import { formatShopDate } from "@/lib/shop-datetime";
 import type { OrderSummary } from "@/types/api";
 import styles from "./page.module.css";
+import { LoyaltyOptInCard } from "./LoyaltyOptInCard";
 
 function statusClass(status: string) {
   const s = (status || "pending").toLowerCase();
@@ -16,11 +17,23 @@ export default async function AccountDashboard() {
     serverApiGet<{ orders: OrderSummary[]; total: number }>("/storefront/customer/orders?limit=5"),
     serverApiGet<{ items: unknown[] }>("/storefront/wishlist"),
     serverApiGet<{ settings: Record<string, string> }>("/storefront/settings"),
-    serverApiGet<{ enabled: boolean; balance: number; points_per_currency_discount?: number }>("/storefront/customer/loyalty"),
+    serverApiGet<{
+      enabled: boolean;
+      balance: number;
+      optin_required?: boolean;
+      optin_id_required?: boolean;
+      registration_status?: "pending" | "approved" | "rejected" | null;
+      rejection_reason?: string | null;
+      points_per_currency_discount?: number;
+    }>("/storefront/customer/loyalty"),
   ]);
   const shopTimeZone = settingsData?.settings?.shop_timezone?.trim() || undefined;
   const loyaltyEnabled = loyaltyData?.enabled ?? false;
   const loyaltyBalance = loyaltyData?.balance ?? 0;
+  const loyaltyOptinRequired = loyaltyData?.optin_required ?? false;
+  const loyaltyOptinIdRequired = loyaltyData?.optin_id_required ?? false;
+  const loyaltyRegistrationStatus = loyaltyData?.registration_status ?? null;
+  const loyaltyRejectionReason = loyaltyData?.rejection_reason ?? null;
 
   const orderCount = ordersData?.total ?? 0;
   const recentOrders = ordersData?.orders || [];
@@ -73,15 +86,26 @@ export default async function AccountDashboard() {
         </Link>
 
         {loyaltyEnabled ? (
-          <div className={styles.statCard}>
-            <div className={styles.statIconWrap} data-color="amber">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          // Loyalty program is enabled
+          loyaltyOptinRequired && loyaltyRegistrationStatus !== "approved" ? (
+            // Opt-in required and not yet approved
+            <LoyaltyOptInCard
+              registrationStatus={loyaltyRegistrationStatus as "pending" | "rejected" | null}
+              optinIdRequired={loyaltyOptinIdRequired}
+              rejectionReason={loyaltyRejectionReason}
+            />
+          ) : (
+            // Approved (or no opt-in required) — show balance
+            <div className={styles.statCard}>
+              <div className={styles.statIconWrap} data-color="amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div className={styles.statInfo}>
+                <p className={styles.statValue}>{loyaltyBalance.toLocaleString()}</p>
+                <p className={styles.statLabel}>Loyalty Points</p>
+              </div>
             </div>
-            <div className={styles.statInfo}>
-              <p className={styles.statValue}>{loyaltyBalance.toLocaleString()}</p>
-              <p className={styles.statLabel}>Loyalty Points</p>
-            </div>
-          </div>
+          )
         ) : (
           <Link href="/account/subscriptions" className={styles.statCard}>
             <div className={styles.statIconWrap} data-color="amber">
