@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getInternalApiBase } from "@/lib/api-config";
 
+const PROXY_TIMEOUT_MS = 10_000;
+
 /**
  * Proxy storefront auth requests to the backend and forward Set-Cookie headers.
  * Next.js rewrites don't reliably pass Set-Cookie from upstream responses,
@@ -16,14 +18,42 @@ async function proxy(req: NextRequest, action: string) {
   const cookie = req.headers.get("cookie");
   if (cookie) headers["Cookie"] = cookie;
 
-  const upstream = await fetch(url, {
-    method: req.method,
-    headers,
-    body: req.method !== "GET" ? await req.text() : undefined,
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, {
+      method: req.method,
+      headers,
+      body: req.method !== "GET" ? await req.text() : undefined,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    const message = err instanceof Error && err.name === "AbortError"
+      ? "Request timed out"
+      : "Unable to reach the server";
+    return NextResponse.json({ status: "error", message }, { status: 502 });
+  } finally {
+    clearTimeout(timer);
+  }
 
   const body = await upstream.text();
-  const res = new NextResponse(body, {
+
+  // Ensure the response is valid JSON — the backend might return HTML/plain text on errors
+  let jsonBody: string;
+  try {
+    JSON.parse(body);
+    jsonBody = body;
+  } catch {
+    jsonBody = JSON.stringify({
+      status: "error",
+      message: body.slice(0, 200) || "Unexpected server response",
+    });
+  }
+
+  const res = new NextResponse(jsonBody, {
     status: upstream.status,
     headers: { "Content-Type": "application/json" },
   });
