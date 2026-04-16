@@ -302,16 +302,26 @@ export default function CheckoutPage() {
 
   const placeOrder = async () => {
     setError("");
-    if (!email || !address1) {
-      setError("Email and street address are required.");
+    const missing: string[] = [];
+    if (!firstName.trim()) missing.push("First name");
+    if (!lastName.trim()) missing.push("Last name");
+    if (!email.trim()) missing.push("Email");
+    if (!phone.trim()) missing.push("Phone number");
+    if (!address1.trim()) missing.push("Street address");
+    if (missing.length > 0) {
+      const msg = `Please fill in: ${missing.join(", ")}`;
+      setError(msg);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     if (!paymentMethod) {
       setError("Select a payment method.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     if (!selectedShipKey) {
       setError("Please wait for shipping to calculate, or select a shipping method.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -365,6 +375,7 @@ export default function CheckoutPage() {
       router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Checkout failed");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setBusy(false);
     }
