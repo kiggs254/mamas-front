@@ -166,7 +166,7 @@ export default function CheckoutPage() {
     [items]
   );
 
-  // Abandoned cart tracking
+  // Abandoned cart tracking — only record after 10 minutes of idle.
   useEffect(() => {
     if (!email.trim() || cartPayload.length === 0) return;
     const t = window.setTimeout(() => {
@@ -179,7 +179,7 @@ export default function CheckoutPage() {
         total_amount: subtotal,
         currency: cc,
       }).catch(() => {});
-    }, 2500);
+    }, 10 * 60 * 1000);
     return () => window.clearTimeout(t);
   }, [email, firstName, lastName, phone, cartPayload, subtotal]);
 
