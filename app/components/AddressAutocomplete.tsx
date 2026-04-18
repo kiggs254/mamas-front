@@ -11,6 +11,8 @@ export type PlaceResolved = {
   county: string;
   lat: number;
   lng: number;
+  /** Google Place ID — used server-side by Distance Matrix for accurate routing. */
+  place_id: string | null;
 };
 
 function buildStreetLine(components: AddrComp[]): string {
@@ -104,6 +106,7 @@ export default function AddressAutocomplete({
                   address_components?: AddrComp[];
                   geometry?: { location?: { lat: () => number; lng: () => number } };
                   formatted_address?: string;
+                  place_id?: string;
                 };
               };
             };
@@ -116,7 +119,7 @@ export default function AddressAutocomplete({
 
       const ac = new places.Autocomplete(inputEl, {
         componentRestrictions: { country: "ke" },
-        fields: ["address_components", "geometry", "formatted_address"],
+        fields: ["address_components", "geometry", "formatted_address", "place_id"],
       });
       acRef.current = ac;
 
@@ -147,6 +150,7 @@ export default function AddressAutocomplete({
           county,
           lat,
           lng,
+          place_id: place.place_id || null,
         });
       });
     })();
