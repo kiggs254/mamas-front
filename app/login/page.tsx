@@ -40,7 +40,11 @@ function LoginForm() {
       } catch {
         /* guest cart merge is optional */
       }
-      router.push(callbackUrl.startsWith("/") ? callbackUrl : "/account");
+      const safeCallback =
+        callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+          ? callbackUrl
+          : "/account";
+      router.push(safeCallback);
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Invalid email or password";
