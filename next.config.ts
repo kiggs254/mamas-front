@@ -87,6 +87,12 @@ const nextConfig: NextConfig = {
         hostname: "cleanshelfapi.emmerce.io",
         pathname: "/**",
       },
+      {
+        // Shared platform object storage — product images on this S3 custom domain.
+        protocol: "https",
+        hostname: "storage.chatcommerce.co.ke",
+        pathname: "/**",
+      },
       ...dynamicImageHosts,
     ],
   },
