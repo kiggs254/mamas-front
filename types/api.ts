@@ -29,6 +29,12 @@ export type StorefrontCategory = {
   age_restricted?: boolean;
   /** Category thumbnail (often `/uploads/...`); use with resolveMediaUrl */
   image?: string | null;
+  /** Long-form category description (admin-authored). */
+  description?: string | null;
+  /** SEO meta description for the category page (admin-authored, raw `seo_description`). */
+  seo_description?: string | null;
+  /** SEO meta title for the category page (admin-authored, raw `seo_title`). */
+  seo_title?: string | null;
   children?: StorefrontCategory[];
 };
 

@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { serverApiGet } from "@/lib/server-api";
+import { getSiteUrl } from "@/lib/api-config";
 import type { StorefrontCategory, StorefrontProduct } from "@/types/api";
 import {
   productEffectivePrice,
@@ -21,7 +23,16 @@ import {
   shopPathFromState,
   type ShopQueryState,
 } from "@/lib/shop-query";
-import { normalizeStorefrontCategoryTree } from "@/lib/categories";
+import { normalizeCategory, normalizeStorefrontCategoryTree } from "@/lib/categories";
+
+/** Trim SEO text to a meta-description-friendly length (~160 chars) on a word boundary. */
+function clampMeta(text: string, max = 160): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trim()}…`;
+}
 
 function slugToTitle(slug: string): string {
   return slug
@@ -65,6 +76,57 @@ function parseShopState(sp: Record<string, string | string[] | undefined>): Shop
   };
 }
 
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const categorySlug = typeof sp.category_slug === "string" ? sp.category_slug : "";
+
+  const siteUrl = getSiteUrl();
+  const storeName = "Mama's Market";
+
+  // Only category pages get bespoke, data-driven SEO. Other shop views (search,
+  // brand, tag, the bare /shop) fall back to a generic store description.
+  if (!categorySlug) {
+    const canonical = `${siteUrl}/shop`;
+    const title = `Shop — ${storeName}`;
+    const description = clampMeta(
+      `Browse fresh produce, international groceries, and everyday essentials at ${storeName} in Vaasa.`,
+    );
+    return {
+      title,
+      description,
+      alternates: { canonical },
+      openGraph: { title, description, url: canonical, type: "website", siteName: storeName },
+    };
+  }
+
+  const catData = await serverApiGet<{ categories: StorefrontCategory[] }>(
+    "/storefront/categories",
+  );
+  const tree = normalizeStorefrontCategoryTree(catData?.categories || []);
+  const match = findCategoryBySlug(tree, categorySlug);
+  const cat = match ? normalizeCategory(match) : null;
+
+  const name = cat?.name || slugToTitle(categorySlug);
+  const title = cat?.seoTitle || `${name} — ${storeName}`;
+  const description = clampMeta(
+    cat?.seoDescription ||
+      cat?.description ||
+      `Shop ${name} at ${storeName} in Vaasa — fresh produce, international groceries, and everyday essentials.`,
+  );
+  const canonical = `${siteUrl}/shop?category_slug=${encodeURIComponent(categorySlug)}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical, type: "website", siteName: storeName },
+  };
+}
+
 export default async function ShopPage({
   searchParams,
 }: {
@@ -104,6 +166,11 @@ export default async function ShopPage({
 
   const categoryTree = normalizeStorefrontCategoryTree(catData?.categories || []);
   const selectedCategory = findCategoryBySlug(categoryTree, categorySlug);
+  const selectedCategoryNorm = selectedCategory ? normalizeCategory(selectedCategory) : null;
+  // Server-rendered intro under the <h1> so crawlers see the category SEO copy.
+  const categoryIntro = categorySlug
+    ? selectedCategoryNorm?.seoDescription || selectedCategoryNorm?.description || null
+    : null;
 
   const wlData =
     customer &&
@@ -157,6 +224,7 @@ export default async function ShopPage({
           {!search && tagSlug ? " with this tag" : ""}
           {!search && !categorySlug && !brandSlug && !tagSlug ? " — browse and filter below." : "."}
         </p>
+        {categoryIntro ? <p className={shell.lead}>{categoryIntro}</p> : null}
       </header>
 
       <ShopToolbar

@@ -28,6 +28,12 @@ export function sessionCookieName(): string {
   return process.env.NEXT_PUBLIC_SESSION_COOKIE_NAME || "shopflow.sid";
 }
 
+/** Public, canonical site origin (no trailing slash) for SEO/canonical/OG URLs. */
+export function getSiteUrl(): string {
+  const u = process.env.NEXT_PUBLIC_SITE_URL || "https://mamasmarket.fi";
+  return u.replace(/\/$/, "");
+}
+
 export function resolveMediaUrl(url: string | null | undefined): string {
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://")) return url;

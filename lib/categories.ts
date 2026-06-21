@@ -1,5 +1,33 @@
 import type { StorefrontCategory } from "@/types/api";
 
+/**
+ * Category fields the storefront actually consumes, with SEO text mapped from the
+ * raw snake_case API payload (`seo_description`, `seo_title`, `description`) onto
+ * stable camelCase accessors. The storefront category endpoint serializes the raw
+ * model, so these fields arrive snake_cased — map them once here so pages/metadata
+ * never have to reach into the raw shape.
+ */
+export type NormalizedCategory = {
+  id: number;
+  name: string;
+  slug?: string;
+  description: string | null;
+  seoDescription: string | null;
+  seoTitle: string | null;
+};
+
+/** Map a raw storefront category onto camelCase accessors, carrying SEO text. */
+export function normalizeCategory(raw: StorefrontCategory): NormalizedCategory {
+  return {
+    id: raw.id,
+    name: raw.name,
+    slug: raw.slug,
+    description: raw.description ?? null,
+    seoDescription: raw.seo_description ?? null,
+    seoTitle: raw.seo_title ?? null,
+  };
+}
+
 function sortCategoryNodes(nodes: StorefrontCategory[]): StorefrontCategory[] {
   return [...nodes]
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }))
