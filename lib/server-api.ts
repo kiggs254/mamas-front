@@ -18,11 +18,22 @@ async function cookieHeader(): Promise<string> {
 
 const SERVER_FETCH_TIMEOUT_MS = 10_000;
 
+// Trusted server-side (SSR) calls carry the shared internal token so the backend
+// skips its per-IP rate limiter for our aggregated server traffic — all SSR
+// reaches the backend from this one server IP, so per-IP limiting collapses
+// every visitor into one bucket and returns 429s. Set INTERNAL_API_TOKEN to the
+// same secret on the backend and here. Server-only env, never shipped to the
+// browser bundle. Unset → header omitted, behaviour unchanged.
+const INTERNAL_API_TOKEN = process.env.INTERNAL_API_TOKEN || "";
+
 export async function serverFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const url = joinPath(getInternalApiBase(), path);
   const headers = new Headers(init.headers);
   const cookie = await cookieHeader();
   if (cookie) headers.set("Cookie", cookie);
+  if (INTERNAL_API_TOKEN && !headers.has("X-Internal-Token")) {
+    headers.set("X-Internal-Token", INTERNAL_API_TOKEN);
+  }
   if (init.body && typeof init.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
