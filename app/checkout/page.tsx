@@ -13,7 +13,9 @@ import { productPrimaryImage } from "@/lib/products";
 import { useCurrency } from "../components/CurrencyContext";
 import type { CartLine, StorefrontProduct, ProductVariant } from "@/types/api";
 
-// Kenya counties — matches the backend countries.ts data
+// Kenya counties — matches the backend countries.ts data.
+// Sorted alphabetically: the source order is official county-code order
+// (Mombasa, Kwale, Kilifi…), which reads as unsorted in the picker.
 const KENYA_COUNTIES = [
   "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
   "Marsabit","Isiolo","Meru","Tharaka-Nithi","Embu","Kitui","Machakos","Makueni","Nyandarua",
@@ -21,7 +23,7 @@ const KENYA_COUNTIES = [
   "Uasin Gishu","Elgeyo-Marakwet","Nandi","Baringo","Laikipia","Nakuru","Narok","Kajiado",
   "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
   "Migori","Kisii","Nyamira","Nairobi City",
-];
+].sort((a, b) => a.localeCompare(b));
 
 type ShipMethod = { id: number | string; name: string; cost?: string | number; type?: string };
 type Gateway = { id: number; name: string; config?: Record<string, unknown> };
