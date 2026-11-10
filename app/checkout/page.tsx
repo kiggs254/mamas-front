@@ -28,6 +28,23 @@ const KENYA_COUNTIES = [
 type ShipMethod = { id: number | string; name: string; cost?: string | number; type?: string };
 type Gateway = { id: number; name: string; config?: Record<string, unknown> };
 
+/** Klarna is a hosted page: the customer pays on klarna.com, then comes back here. */
+const isKlarna = (name: string) => /^klarna$/i.test(name.trim());
+const KLARNA_PAGE = /^https:\/\/[a-z0-9.-]*klarna\.com\//i;
+const KLARNA_RETURN_PATH = "/checkout";
+
+/** Ask the backend for a Klarna payment page for an order and go there. */
+async function startKlarnaPayment(orderId: number): Promise<void> {
+  const res = await apiPost<{ redirect_url?: string }>("/storefront/checkout/process-payment", {
+    order_id: orderId,
+    gateway_name: "Klarna",
+    payment_data: { return_path: KLARNA_RETURN_PATH },
+  });
+  const url = String(res?.redirect_url || "");
+  if (!KLARNA_PAGE.test(url)) throw new Error("Klarna could not open the payment page. Please try again.");
+  window.location.assign(url);
+}
+
 function lineUnitPrice(line: CartLine): number {
   const v = line.variant as ProductVariant | null | undefined;
   if (v && v.price != null) {
@@ -73,6 +90,11 @@ export default function CheckoutPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [doneOrderId, setDoneOrderId] = useState<number | null>(null);
+  const [doneOrderNumber, setDoneOrderNumber] = useState<string>("");
+  const [donePending, setDonePending] = useState(false);
+  // An order whose Klarna payment didn't go through — the customer can retry it.
+  const [retryOrderId, setRetryOrderId] = useState<number | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   type LoyaltyCfg = {
     enabled: boolean;
@@ -114,6 +136,78 @@ export default function CheckoutPage() {
       .then((d) => setLoyaltyConfig(d.config))
       .catch(() => setLoyaltyConfig(null));
   }, []);
+
+  // Back from Klarna: the backend has already checked the payment with Klarna
+  // and tells us success | pending | failed. Never trust it for money — the
+  // order is only marked paid server-side — it only picks what to show.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("gateway") !== "klarna") return;
+    const outcome = q.get("payment");
+    const id = Number(q.get("order_id"));
+    const number = (q.get("order") || "").slice(0, 40);
+    const reason = q.get("reason");
+    window.history.replaceState(null, "", KLARNA_RETURN_PATH);
+    if (!Number.isSafeInteger(id) || id <= 0) {
+      if (outcome !== "success") setError("Your Klarna payment was not completed.");
+      return;
+    }
+    if (outcome === "success") {
+      setDoneOrderNumber(number);
+      setDoneOrderId(id);
+      void mutate();
+      return;
+    }
+    if (outcome === "pending") {
+      let cancelled = false;
+      (async () => {
+        for (let i = 0; i < 5 && !cancelled; i++) {
+          try {
+            const r = await apiPost<{ payment_status?: string }>(`/storefront/orders/${id}/verify-payment`, {});
+            if (r?.payment_status === "paid") break;
+            if (r?.payment_status === "failed") {
+              setRetryOrderId(id);
+              setError("Klarna did not approve the payment. You can try again.");
+              return;
+            }
+          } catch {
+            /* keep waiting */
+          }
+          if (i === 4) {
+            setDonePending(true);
+            break;
+          }
+          await new Promise((r) => setTimeout(r, 3000));
+        }
+        if (cancelled) return;
+        setDoneOrderNumber(number);
+        setDoneOrderId(id);
+        void mutate();
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+    setRetryOrderId(id);
+    setError(
+      reason === "cancelled"
+        ? `You cancelled the Klarna payment. Your order${number ? ` ${number}` : ""} is saved — you can pay for it now.`
+        : `The Klarna payment did not go through. Your order${number ? ` ${number}` : ""} is saved — you can try again.`
+    );
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [mutate]);
+
+  const retryKlarna = async () => {
+    if (!retryOrderId) return;
+    setError("");
+    setRedirecting(true);
+    try {
+      await startKlarnaPayment(retryOrderId);
+    } catch (e: unknown) {
+      setRedirecting(false);
+      setError(e instanceof Error ? e.message : "Klarna could not open the payment page.");
+    }
+  };
 
   useEffect(() => {
     apiGet<{ gateways: Gateway[] }>("/storefront/checkout/payment-gateways")
@@ -360,6 +454,22 @@ export default function CheckoutPage() {
       );
 
       const orderId = orderRes.order?.id;
+      if (orderId && isKlarna(paymentMethod)) {
+        await mutate();
+        try {
+          setRedirecting(true);
+          await startKlarnaPayment(orderId);
+          return; // leaving for klarna.com
+        } catch (e: unknown) {
+          setRedirecting(false);
+          setRetryOrderId(orderId);
+          setError(
+            `${e instanceof Error ? e.message : "Klarna could not open the payment page."} Your order is saved — you can try again.`
+          );
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+      }
       if (orderId) {
         try {
           await apiPost("/storefront/checkout/process-payment", {
@@ -372,6 +482,7 @@ export default function CheckoutPage() {
         }
       }
 
+      setDoneOrderNumber(orderRes.order?.order_number || "");
       setDoneOrderId(orderId ?? null);
       await mutate();
       router.refresh();
@@ -404,9 +515,14 @@ export default function CheckoutPage() {
               </div>
               <h1 className={styles.successTitle}>Order Placed!</h1>
               <p className={styles.successText}>
-                Thank you for your order. Your order reference is <strong>#{doneOrderId}</strong>.
+                Thank you for your order. Your order reference is{" "}
+                <strong>{doneOrderNumber || `#${doneOrderId}`}</strong>.
               </p>
-              <p className={styles.successText}>We&apos;ll send you a confirmation shortly.</p>
+              <p className={styles.successText}>
+                {donePending
+                  ? "Klarna is still confirming your payment. We'll email you as soon as it's confirmed."
+                  : "We'll send you a confirmation shortly."}
+              </p>
               <div className={styles.successActions}>
                 <Link href="/account/orders" className={styles.successBtn}>View My Orders</Link>
                 <Link href="/shop" className={styles.successBtnOutline}>Continue Shopping</Link>
@@ -444,7 +560,24 @@ export default function CheckoutPage() {
           ) : (
             <>
               <div className={styles.formsPanel}>
-                {error && <div className={styles.errorBanner}>{error}</div>}
+                {error && (
+                  <div className={styles.errorBanner} role="alert">
+                    {error}
+                    {retryOrderId && (
+                      <div>
+                        <button
+                          type="button"
+                          className={styles.submitBtn}
+                          style={{ marginTop: 12 }}
+                          disabled={redirecting}
+                          onClick={retryKlarna}
+                        >
+                          {redirecting ? "Opening Klarna…" : "Pay with Klarna"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Step 1: Contact */}
                 <div className={styles.section}>
@@ -627,14 +760,14 @@ export default function CheckoutPage() {
                 {/* Place order */}
                 <button
                   type="button"
-                  className={`${styles.submitBtn} ${busy ? styles.submitBusy : ""}`}
-                  disabled={busy}
+                  className={`${styles.submitBtn} ${busy || redirecting ? styles.submitBusy : ""}`}
+                  disabled={busy || redirecting}
                   onClick={placeOrder}
                 >
-                  {busy ? (
+                  {busy || redirecting ? (
                     <>
                       <span className={styles.spinner} />
-                      Placing order…
+                      {redirecting ? "Opening Klarna…" : "Placing order…"}
                     </>
                   ) : (
                     <>
