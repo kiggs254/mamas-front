@@ -93,6 +93,12 @@ const nextConfig: NextConfig = {
         hostname: "storage.chatcommerce.co.ke",
         pathname: "/**",
       },
+      {
+        // Same bucket, current address (chatcommerce.co.ke expired Oct 2026).
+        protocol: "https",
+        hostname: "storage.e-biz.co.ke",
+        pathname: "/**",
+      },
       ...dynamicImageHosts,
     ],
   },
